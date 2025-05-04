@@ -3,8 +3,11 @@ import {
     PrimaryGeneratedColumn,
     Column,
     CreateDateColumn,
-    UpdateDateColumn
+    UpdateDateColumn,
+    OneToMany
 } from "typeorm";
+import { Follower } from "./Follower";
+import { Routine } from "./Routine";
 
 @Entity()
 export class User {
@@ -37,4 +40,13 @@ export class User {
 
     @UpdateDateColumn()
     updatedAt!: Date;
+
+    @OneToMany(() => Follower, (f) => f.follower)
+    following!: Follower[];
+
+    @OneToMany(() => Follower, (f) => f.following)
+    followers!: Follower[];
+
+    @OneToMany(() => Routine, (routine) => routine.owner)
+    routines!: Routine[];
 }

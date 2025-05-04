@@ -1,8 +1,8 @@
 import { Response } from "express";
 import { updateUserProfile } from "../services/userService";
-import { AuthRequest } from "../middlewares.ts/authMiddleware";
-import { getRepository } from "typeorm";
+import { AuthRequest } from "../middlewares/authMiddleware";
 import { User } from "../entities/User";
+import { AppDataSource } from "../data-source";
 
 export const updateProfile = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
@@ -42,7 +42,8 @@ export const getCurrentUser = async (req: AuthRequest, res: Response): Promise<v
             return;
         }
 
-        const user = await getRepository(User).findOne({
+        const repo = AppDataSource.getRepository(User);
+        const user = await repo.findOne({
             where: { id: userId },
             select: ['id', 'email', 'username', 'name', 'birthdate', 'bio', 'profilePic', 'createdAt'],
         });
@@ -68,7 +69,8 @@ export const getUserById = async (req: AuthRequest, res: Response): Promise<void
             return;
         }
 
-        const user = await getRepository(User).findOne({
+        const repo = AppDataSource.getRepository(User);
+        const user = await repo.findOne({
             where: { id: userId },
             select: ['id', 'username', 'name', 'birthdate', 'bio', 'profilePic', 'createdAt'],
         });
@@ -93,8 +95,8 @@ export const deleteAccount = async (req: AuthRequest, res: Response): Promise<vo
             return;
         }
 
-        const userRepo = getRepository(User);
-        const result = await userRepo.delete({ id: userId });
+        const repo = AppDataSource.getRepository(User);
+        const result = await repo.delete({ id: userId });
 
         if (result.affected === 0) {
             res.status(404).json({ message: 'Usuario no encontrado' });
