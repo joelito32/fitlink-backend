@@ -7,6 +7,8 @@ import userRoutes from './routes/userRoutes';
 import followerRoutes from './routes/followerRoutes';
 import exerciseRoutes from './routes/exerciseRoutes';
 import routineRoutes from './routes/routineRoutes';
+import savedRoutineRoutes from './routes/savedRoutineRoutes';
+import trainingLogRoutes from './routes/trainingLogRoutes';
 
 dotenv.config();
 
@@ -20,6 +22,8 @@ app.use('/api/user', userRoutes);
 app.use('/api', followerRoutes);
 app.use('/api/exercises', exerciseRoutes);
 app.use('/api/routines', routineRoutes);
+app.use('/api', savedRoutineRoutes);
+app.use('/api/trainingLogs', trainingLogRoutes);
 
 app.get('/', (__req, res) => {
     res.send('✅ API de FitLink funcionando');

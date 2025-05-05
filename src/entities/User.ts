@@ -8,6 +8,8 @@ import {
 } from "typeorm";
 import { Follower } from "./Follower";
 import { Routine } from "./Routine";
+import { SavedRoutine } from "./SavedRoutine";
+import { TrainingLog } from "./TrainingLog";
 
 @Entity()
 export class User {
@@ -49,4 +51,10 @@ export class User {
 
     @OneToMany(() => Routine, (routine) => routine.owner)
     routines!: Routine[];
+
+    @OneToMany(() => SavedRoutine, (sr) => sr.user)
+    savedRoutines!: SavedRoutine[];
+
+    @OneToMany(() => TrainingLog, (log) => log.user)
+    trainingLogs!: TrainingLog[];
 }
