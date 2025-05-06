@@ -1,11 +1,13 @@
-import { AppDataSource } from "../data-source"
-import { User } from "../entities/User"
+import { AppDataSource } from "../data-source";
+import { User } from "../entities/User";
+import { WeightLog } from "../entities/WeightLog";
 
 interface ProfileData {
     name?: string;
     birthdate?: Date;
     bio?: string;
     profilePic?: string;
+    weight?: number;
 }
 
 const DEFAULT_PROFILE_PIC = 
@@ -13,9 +15,10 @@ const DEFAULT_PROFILE_PIC =
 
 export const updateUserProfile = async (
     userId: number,
-    { name, birthdate, bio, profilePic }: ProfileData
+    { name, birthdate, bio, profilePic, weight }: ProfileData
 ): Promise<{ success: boolean; message: string }> => {
     const userRepo = AppDataSource.getRepository(User);
+    const weightLogRepo = AppDataSource.getRepository(WeightLog);
     const user = await userRepo.findOneBy({ id: userId });
 
     if (!user) {
@@ -41,6 +44,22 @@ export const updateUserProfile = async (
         }
 
         user.birthdate = birth
+    }
+
+    if (weight !== undefined) {
+        if (isNaN(weight) || weight <= 0) {
+            return { success: false, message: 'El peso debe ser un número válido' };
+        }
+
+        if (user.weight !== weight) {
+            user.weight = weight;
+
+            const newLog = weightLogRepo.create({
+                user: { id: userId },
+                value: weight,
+            });
+            await weightLogRepo.save(newLog);
+        }
     }
 
     user.name = name ?? user.name;

@@ -10,6 +10,7 @@ import { Follower } from "./Follower";
 import { Routine } from "./Routine";
 import { SavedRoutine } from "./SavedRoutine";
 import { TrainingLog } from "./TrainingLog";
+import { WeightLog } from "./WeightLog";
 
 @Entity()
 export class User {
@@ -37,6 +38,9 @@ export class User {
     @Column({ nullable: true })
     profilePic?: string;
 
+    @Column({ type: 'float', nullable: true })
+    weight?: number;
+
     @CreateDateColumn()
     createdAt!: Date;
 
@@ -57,4 +61,7 @@ export class User {
 
     @OneToMany(() => TrainingLog, (log) => log.user)
     trainingLogs!: TrainingLog[];
+
+    @OneToMany(() => WeightLog, (log) => log.user)
+    weightLogs!: WeightLog[];
 }

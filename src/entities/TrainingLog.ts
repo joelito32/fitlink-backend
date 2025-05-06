@@ -38,6 +38,9 @@ export class TrainingLog {
     @Column({ type: 'float', default: 0 })
     totalWeight!: number;
 
+    @Column({ type: 'float', nullable: true })
+    caloriesBurned?: number;
+
     @CreateDateColumn()
     createdAt!: Date;
 }

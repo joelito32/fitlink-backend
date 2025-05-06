@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { AppDataSource } from "../data-source";
 import { TrainingLog } from "../entities/TrainingLog";
 import { ExercisePerformance } from "../entities/ExercisePerformance";
+import { User } from "../entities/User";
 import { AuthRequest } from "../middlewares/authMiddleware";
 import { Routine } from "../entities/Routine";
 
@@ -25,6 +26,14 @@ export const createTrainingLog = async (req: AuthRequest, res: Response): Promis
 
         if (!routine) {
             res.status(404).json({ message: 'Rutina no encontrada' });
+            return;
+        }
+
+        const userRepo = AppDataSource.getRepository(User);
+        const user = await userRepo.findOneBy({ id: userId });
+
+        if (!user) {
+            res.status(404).json({ message: 'Usuario no encontrado' });
             return;
         }
 
@@ -65,6 +74,14 @@ export const createTrainingLog = async (req: AuthRequest, res: Response): Promis
             performances.push(perf);
         }
 
+        let caloriesBurned: number | undefined = undefined;
+
+        if (user.weight) {
+            const minutes = duration / 60;
+            const MET = 6;
+            caloriesBurned = 0.0175 * MET * user.weight * minutes;
+        }
+
         const trainingRepo = AppDataSource.getRepository(TrainingLog);
         const newLog = trainingRepo.create({
             user: { id: userId },
@@ -73,6 +90,7 @@ export const createTrainingLog = async (req: AuthRequest, res: Response): Promis
             endedAt: end,
             duration,
             totalWeight,
+            caloriesBurned,
             performances,
         });
 
