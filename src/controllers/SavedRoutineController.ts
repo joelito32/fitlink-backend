@@ -3,16 +3,26 @@ import { AppDataSource } from '../data-source';
 import { AuthRequest } from '../middlewares/authMiddleware';
 import { Routine } from '../entities/Routine';
 import { SavedRoutine } from '../entities/SavedRoutine';
+import { createNotification } from '../services/notificationService';
 
 export const addSavedRoutine = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
         const userId = req.userId;
+        if (!userId) {
+            res.status(401).json({ message: 'No autorizado' });
+            return;
+        }
+
         const routineId = parseInt(req.params.routineId);
 
         const routineRepo = AppDataSource.getRepository(Routine);
         const savedRepo = AppDataSource.getRepository(SavedRoutine);
 
-        const routine = await routineRepo.findOneBy({ id: routineId });
+        const routine = await routineRepo.findOne({ 
+            where: { id: routineId },
+            relations: ['owner'],
+        });
+
         if (!routine || !routine.isPublic) {
             res.status(404).json({ message: 'Rutina no encontrada o no pública' });
             return;
@@ -33,6 +43,11 @@ export const addSavedRoutine = async (req: AuthRequest, res: Response): Promise<
         });
 
         await savedRepo.save(saved);
+
+        if (routine.owner.id !== userId) {
+            await createNotification(routine.owner.id, userId, 'ha guardado tu rutina');
+        }
+
         res.status(201).json({ message: 'Rutina guardada' });
     } catch (error) {
         console.error('Error al guardar rutina:', error);

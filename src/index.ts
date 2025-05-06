@@ -13,6 +13,7 @@ import statisticsRoutes from './routes/statisticsRoutes';
 import postRoutes from './routes/postRoutes';
 import postInteractionsRoutes from './routes/postInteractionsRoutes';
 import postCommentRoutes from './routes/postCommentRoutes';
+import notificationRoutes from './routes/notificationRoutes';
 
 dotenv.config();
 
@@ -32,6 +33,7 @@ app.use('/api/statistics', statisticsRoutes);
 app.use('/api/posts', postRoutes);
 app.use('/api/posts/interactions', postInteractionsRoutes);
 app.use('/api/posts/comments', postCommentRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 app.get('/', (__req, res) => {
     res.send('✅ API de FitLink funcionando');

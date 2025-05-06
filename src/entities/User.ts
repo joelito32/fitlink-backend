@@ -16,6 +16,7 @@ import { PostComment } from "./PostComment";
 import { PostLike } from "./PostLike";
 import { PostSaved } from "./PostSaved";
 import { PostCommentLike } from "./PostCommentLike";
+import { Notification } from "./Notification";
 
 @Entity()
 export class User {
@@ -84,4 +85,7 @@ export class User {
 
     @OneToMany(() => PostCommentLike, (like) => like.user)
     likedPostComments!: PostCommentLike[];
+
+    @OneToMany(() => Notification, (n) => n.recipient)
+    notifications!: Notification[];
 }

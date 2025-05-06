@@ -4,13 +4,24 @@ import { AuthRequest } from '../middlewares/authMiddleware';
 import { Post } from '../entities/Post';
 import { PostLike } from '../entities/PostLike';
 import { PostSaved } from '../entities/PostSaved';
+import { User } from '../entities/User';
+import { createNotification } from '../services/notificationService';
 
 export const likePost = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
         const userId = req.userId;
+        if (!userId) {
+            res.status(401).json({ message: 'No autorizado' });
+            return;
+        }
+
         const postId = parseInt(req.params.postId);
 
-        const post = await AppDataSource.getRepository(Post).findOneBy({ id: postId });
+        const post = await AppDataSource.getRepository(Post).findOne({ 
+            where: { id: postId },
+            relations: ['author'], 
+        });
+
         if (!post) {
             res.status(404).json({ message: 'Post no encontrado' });
             return;
@@ -28,6 +39,10 @@ export const likePost = async (req: AuthRequest, res: Response): Promise<void> =
 
         const like = likeRepo.create({ user: { id: userId }, post });
         await likeRepo.save(like);
+
+        if (post.author.id !== userId) {
+            await createNotification(post.author.id, userId, 'le ha dado like a tu post');
+        }
 
         res.status(201).json({ message: 'Like registrado' });
     } catch (error) {
@@ -78,9 +93,18 @@ export const checkPostLiked = async (req: AuthRequest, res: Response): Promise<v
 export const savePost = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
         const userId = req.userId;
+        if (!userId) {
+            res.status(401).json({ message: 'No autorizado' });
+            return;
+        }
+
         const postId = parseInt(req.params.postId);
         
-        const post = await AppDataSource.getRepository(Post).findOneBy({ id: postId });
+        const post = await AppDataSource.getRepository(Post).findOne({ 
+            where: { id: postId },
+            relations: ['author'], 
+        });
+        
         if (!post) {
             res.status(404).json({ message: 'Post no encontrado' });
             return;
@@ -98,6 +122,10 @@ export const savePost = async (req: AuthRequest, res: Response): Promise<void> =
 
         const saved = repo.create({ user: { id: userId }, post });
         await repo.save(saved);
+
+        if (post.author.id !== userId) {
+            await createNotification(post.author.id, userId, 'ha guardado tu post');
+        }
 
         res.status(201).json({ message: 'Post guardado' });
     } catch (error) {

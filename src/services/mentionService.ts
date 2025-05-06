@@ -1,8 +1,7 @@
 import { AppDataSource } from '../data-source';
 import { User } from '../entities/User';
 import { Mention } from '../entities/Mention';
-import { Post } from '../entities/Post';
-import { PostComment } from '../entities/PostComment';
+import { createNotification } from './notificationService';
 
 export const detectMentions = async (
     text: string,
@@ -46,6 +45,8 @@ export const detectMentions = async (
             });
 
             await mentionRepo.save(mention);
+
+            await createNotification(mentionedUser.id, createdById, 'te ha mencionado');
         }
     } catch (error) {
         console.error('Error al detectar menciones:', error);

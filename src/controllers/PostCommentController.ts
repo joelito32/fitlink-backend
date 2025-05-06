@@ -6,6 +6,7 @@ import { PostComment } from '../entities/PostComment';
 import { PostCommentLike } from '../entities/PostCommentLike';
 import { detectMentions } from '../services/mentionService';
 import { IsNull } from 'typeorm';
+import { createNotification } from '../services/notificationService';
 
 export const createComment = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
@@ -39,6 +40,21 @@ export const createComment = async (req: AuthRequest, res: Response): Promise<vo
 
         await commentRepo.save(comment);
         await detectMentions(content, userId, false, undefined, comment.id);
+
+        if (!parentId && post.author.id !== userId) {
+            await createNotification(post.author.id, userId, 'ha comentado tu post');
+        }
+
+        if (parentId) {
+            const parent = await commentRepo.findOne({
+                where: { id: parentId },
+                relations: ['author'],
+            });
+
+            if (parent && parent.author.id !== userId) {
+                await createNotification(parent.author.id, userId, 'ha respondido a tu comentario');
+            }
+        }
 
         res.status(201).json({ message: 'Comentario creado', comment });
     } catch (error) {
@@ -74,6 +90,11 @@ export const deleteComment = async (req: AuthRequest, res: Response): Promise<vo
 export const likeComment = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
         const userId = req.userId;
+        if (!userId) {
+            res.status(401).json({ message: 'No autorizado' });
+            return;
+        }
+        
         const commentId = parseInt(req.params.commentId);
 
         const repo = AppDataSource.getRepository(PostCommentLike);
@@ -92,6 +113,17 @@ export const likeComment = async (req: AuthRequest, res: Response): Promise<void
         });
 
         await repo.save(like);
+
+        const commentRepo = AppDataSource.getRepository(PostComment);
+        const comment = await commentRepo.findOne({
+            where: { id: commentId },
+            relations: ['author'],
+        });
+
+        if (comment && comment.author.id !== userId) {
+            await createNotification(comment.author.id, userId, 'le ha dado like a tu comentario');
+        }
+
         res.status(201).json({ message: 'Like al comentario registrado' });
     } catch (error) {
         console.error('Error al dar like al comentario:', error);

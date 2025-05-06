@@ -3,10 +3,16 @@ import { AppDataSource } from "../data-source";
 import { Follower } from "../entities/Follower";
 import { User } from "../entities/User";
 import { AuthRequest } from "../middlewares/authMiddleware";
+import { createNotification } from "../services/notificationService";
 
 export const followUser = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
         const userId = req.userId;
+        if (!userId) {
+            res.status(401).json({ message: 'No autorizado' });
+            return;
+        }
+
         const targetId = parseInt(req.params.id);
 
         if (userId === targetId) {
@@ -32,12 +38,15 @@ export const followUser = async (req: AuthRequest, res: Response): Promise<void>
             return;
         }
 
-        const newFollow = followerRepo.create({
+        const follower = followerRepo.create({
             follower: { id: userId },
             following: { id: targetId },
         });
 
-        await followerRepo.save(newFollow);
+        await followerRepo.save(follower);
+
+        await createNotification(targetId, userId, 'te ha empezado a seguir');
+        
         res.status(201).json({ message: 'Ahora sigues a este usuario' });
     } catch (error) {
         console.error('Error en followUser:', error);
