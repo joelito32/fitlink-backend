@@ -9,6 +9,7 @@ import {
 } from "typeorm";
 import { User } from "./User";
 import { ExerciseLog } from "./ExerciseLog";
+import { SavedRoutine } from "./SavedRoutine";
 
 @Entity()
 export class Routine {
@@ -21,6 +22,9 @@ export class Routine {
     @Column({ nullable: true })
     description?: string;
 
+    @Column({ default: false })
+    isPublic!: boolean;
+
     @ManyToOne(() => User, (user) => user.routines, { onDelete: 'CASCADE' })
     owner!: User;
 
@@ -28,6 +32,9 @@ export class Routine {
         cascade: true,
     })
     exercises!: ExerciseLog[];
+
+    @OneToMany(() => SavedRoutine, (saved) => saved.routine)
+    savedBy!: SavedRoutine[];
 
     @CreateDateColumn()
     createdAt!: Date;

@@ -178,3 +178,30 @@ export const deleteRoutine = async (req: AuthRequest, res: Response): Promise<vo
         res.status(500).json({ message: 'Error al eliminar rutina' });
     }
 };
+
+export const getPublicRoutinesFromFollowedUsers = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+        const userId = req.userId;
+
+        const raw = await AppDataSource.getRepository(Routine)
+            .createQueryBuilder('routine')
+            .leftJoinAndSelect('routine.owner', 'owner')
+            .where(qb => {
+                const sub = qb.subQuery()
+                    .select('f.followingId')
+                    .from('follower', 'f')
+                    .where('f.followerId = :userId')
+                    .getQuery();
+                return 'routine.ownerId IN ' + sub;
+            })
+            .andWhere('routine.isPublic = true')
+            .setParameter('userId', userId)
+            .orderBy('routine.id', 'DESC')
+            .getMany();
+
+        res.status(200).json(raw);
+    } catch (error) {
+        console.error('Error al obtener rutinas públicas:', error);
+        res.status(500).json({ message: 'Error interno' });
+    }
+};

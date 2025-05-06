@@ -17,9 +17,6 @@ export class SavedRoutine {
     @ManyToOne(() => User, (user) => user.savedRoutines, { onDelete: 'CASCADE' })
     user!: User;
 
-    @ManyToOne(() => Routine, {onDelete: 'CASCADE' })
+    @ManyToOne(() => Routine, (routine) => routine.savedBy, { onDelete: 'CASCADE' })
     routine!: Routine;
-
-    @CreateDateColumn()
-    savedAt!: Date;
 }

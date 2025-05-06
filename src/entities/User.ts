@@ -61,7 +61,7 @@ export class User {
     @OneToMany(() => Routine, (routine) => routine.owner)
     routines!: Routine[];
 
-    @OneToMany(() => SavedRoutine, (sr) => sr.user)
+    @OneToMany(() => SavedRoutine, (saved) => saved.user)
     savedRoutines!: SavedRoutine[];
 
     @OneToMany(() => TrainingLog, (log) => log.user)

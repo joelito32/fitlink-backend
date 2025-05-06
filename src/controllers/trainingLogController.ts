@@ -22,10 +22,13 @@ export const createTrainingLog = async (req: AuthRequest, res: Response): Promis
         }
 
         const routineRepo = AppDataSource.getRepository(Routine);
-        const routine = await routineRepo.findOneBy({ id: routineId });
+        const routine = await routineRepo.findOne({
+            where: { id: routineId },
+            relations: ['owner'],
+        });
 
-        if (!routine) {
-            res.status(404).json({ message: 'Rutina no encontrada' });
+        if (!routine || (!routine.isPublic && routine.owner.id !== userId)) {
+            res.status(403).json({ message: 'No tienes acceso a esta rutina' });
             return;
         }
 

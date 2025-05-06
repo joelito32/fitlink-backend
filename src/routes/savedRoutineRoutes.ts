@@ -10,8 +10,8 @@ const router = Router();
 
 router.use(authMiddleware);
 
-router.post('/routines/save/:id', addSavedRoutine);
-router.delete('/routines/save/:id', removeSavedRoutine);
-router.get('/routines/saved', getSavedRoutines);
+router.post('/:routineId', addSavedRoutine);
+router.delete('/:routineId', removeSavedRoutine);
+router.get('/', getSavedRoutines);
 
 export default router;

@@ -26,7 +26,7 @@ app.use('/api/user', userRoutes);
 app.use('/api', followerRoutes);
 app.use('/api/exercises', exerciseRoutes);
 app.use('/api/routines', routineRoutes);
-app.use('/api', savedRoutineRoutes);
+app.use('/api/routines/saved', savedRoutineRoutes);
 app.use('/api/trainingLogs', trainingLogRoutes);
 app.use('/api/statistics', statisticsRoutes);
 app.use('/api/posts', postRoutes);
