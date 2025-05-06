@@ -92,6 +92,30 @@ export const getStatistics = async (req: AuthRequest, res: Response): Promise<vo
             value: log.value,
         }));
 
+        const routineUsage: Record<number, { title: string; count: number }> = {};
+        for (const log of logs) {
+            const id = log.routine?.id;
+            const title = log.routine?.title || 'Sin título';
+            if (id) {
+                if (!routineUsage[id]) {
+                    routineUsage[id] = { title, count: 0 };
+                }
+                routineUsage[id].count++;
+            }
+        }
+
+        const mostUsedRoutines = Object.values(routineUsage).sort((a, b) => b.count - a.count);
+
+        const exerciseFrequency: Record<string, { name: string, count: number }> = {};
+        for (const p of performances) {
+            if (!exerciseFrequency[p.exerciseId]) {
+                exerciseFrequency[p.exerciseId] = { name: p.name, count: 0 };
+            }
+            exerciseFrequency[p.exerciseId].count++;
+        }
+
+        const mostFrequentExercises = Object.values(exerciseFrequency).sort((a, b) => b.count - a.count);
+
         res.status(200).json({
             sessionsPerWeek,
             totalWeightPerWeek,
@@ -103,7 +127,9 @@ export const getStatistics = async (req: AuthRequest, res: Response): Promise<vo
             totalTimeMonth,
             totalCaloriesWeek,
             totalCaloriesMonth,
-            weightHistory
+            weightHistory,
+            mostUsedRoutines,
+            mostFrequentExercises,
         });
     } catch (error) {
         console.error('Error al calcular estadísticas:', error);
