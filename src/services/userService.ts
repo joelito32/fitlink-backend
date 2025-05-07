@@ -29,6 +29,10 @@ export const updateUserProfile = async (
         return { success: false, message: 'Nombre inválido' };
     }
 
+    if (name && name.length > 50) {
+        return { success: false, message: 'El nombre no puede tener más de 50 caracteres' };
+    } 
+
     if (bio && bio.length > 100) {
         return { success: false, message: 'La biografía no puede tener más de 100 caracteres' };
     }
@@ -60,6 +64,10 @@ export const updateUserProfile = async (
             });
             await weightLogRepo.save(newLog);
         }
+    }
+
+    if (profilePic && !/^https?:\/\/.+\.(jpg|jpeg|png|webp|gif)$/.test(profilePic)) {
+        return { success: false, message: 'URL de imagen no válida para la foto de perfil' };
     }
 
     user.name = name ?? user.name;

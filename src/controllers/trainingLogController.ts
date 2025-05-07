@@ -47,6 +47,11 @@ export const createTrainingLog = async (req: AuthRequest, res: Response): Promis
         const performances: ExercisePerformance[] = [];
         let totalWeight = 0;
 
+        if (exercises.length === 0) {
+            res.status(400).json({ message: 'Debes registrar al menos un ejercicio' });
+            return;
+        }
+
         for (const e of exercises) {
             const { exerciseId, name, reps, weights, isBodyweight } = e;
 
@@ -71,6 +76,12 @@ export const createTrainingLog = async (req: AuthRequest, res: Response): Promis
             for (let i = 0; i < reps.length; i++) {
                 const rep = reps[i];
                 const weight = weights[i];
+
+                if (typeof rep !== 'number' || rep <= 0 || typeof weight !== 'number' || weight < 0) {
+                    res.status(400).json({ message: 'Cada repetición debe ser > 0 y el peso ≥ 0' });
+                    return;
+                }
+
                 totalWeight += (isBodyweight ? 0 : rep * weight); // si es con peso corporal, no suma al total (o puedes usar peso del usuario si lo tienes)
             }
 

@@ -10,6 +10,10 @@ export const getStatistics = async (req: AuthRequest, res: Response): Promise<vo
     try {
         const userId = req.userId;
         const exerciseIdFilter = req.query.exerciseId?.toString();
+        if (exerciseIdFilter && typeof exerciseIdFilter !== 'string') {
+            res.status(400).json({ message: 'Parámetro exerciseId inválido' });
+            return;
+        }
 
         const trainingRepo = AppDataSource.getRepository(TrainingLog);
         const logs = await trainingRepo.find({
@@ -68,7 +72,7 @@ export const getStatistics = async (req: AuthRequest, res: Response): Promise<vo
             const filtered = performances.filter(p => p.exerciseId === exerciseIdFilter);
             exerciseProgress = filtered.map(p => ({
                 date: p.date.toISOString().split('T')[0],
-                maxWeight: Math.max(...p.weights.map(Number)),
+                maxWeight: p.weights.length > 0 ? Math.max(...p.weights.map(Number)) : 0,
             })).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
         }
 
@@ -169,8 +173,10 @@ export const getExerciseImprovementStats = async (req: AuthRequest, res: Respons
                 grouped[perf.exerciseId] = {
                     name: perf.name,
                     entries: [],
-            };
+                };
             }
+
+            if (!perf.trainingLog || !perf.trainingLog.startedAt) continue;
 
             grouped[perf.exerciseId].entries.push({
                 date: perf.trainingLog.startedAt.toISOString().split('T')[0],

@@ -15,6 +15,16 @@ export const createRoutine = async (req: AuthRequest, res: Response): Promise<vo
             return;
         }
 
+        if (title.trim().length < 3 || title.trim().length > 50) {
+            res.status(400).json({ message: 'El título debe tener entre 3 y 50 caracteres' });
+            return;
+        }
+
+        if (description && description.length > 300) {
+            res.status(400).json({ message: 'La descripción no puede superar los 300 caracteres' });
+            return;
+        }
+
         const validatedExercises: ExerciseLog[] = [];
 
         for (const e of exercises) {
@@ -22,6 +32,11 @@ export const createRoutine = async (req: AuthRequest, res: Response): Promise<vo
 
             if (!exerciseId || !sets || !reps) {
                 res.status(400).json({ message: 'Datos incompletos en algún ejercicio' });
+                return;
+            }
+
+            if (sets <= 0 || reps <= 0) {
+                res.status(400).json({ message: 'Sets y repeticiones deben ser mayores que 0' });
                 return;
             }
 
@@ -107,16 +122,31 @@ export const updateRoutine = async (req: AuthRequest, res: Response): Promise<vo
             return;
         }   
 
+        if (title.trim().length < 3 || title.trim().length > 50) {
+            res.status(400).json({ message: 'El título debe tener entre 3 y 50 caracteres' });
+            return;
+        }
+
+        if (description && description.length > 300) {
+            res.status(400).json({ message: 'La descripción no puede superar los 300 caracteres' });
+            return;
+        }
+
         const validatedExercises: ExerciseLog[] = [];
 
         for (const e of exercises) {
             const { exerciseId, sets, reps } = e;
-        
-            if (!exerciseId || typeof sets !== 'number' || typeof reps !== 'string') {
-                res.status(400).json({ message: 'Ejercicio con datos incompletos o incorrectos' });
+
+            if (!exerciseId || !sets || !reps) {
+                res.status(400).json({ message: 'Datos incompletos en algún ejercicio' });
                 return;
             }
-        
+
+            if (!exerciseId || sets <= 0 || reps <= 0) {
+                res.status(400).json({ message: 'Sets y repeticiones deben ser mayores que 0' });
+                return;
+            }
+
             const apiExercise = await getExerciseById(exerciseId);
             if (!apiExercise || !apiExercise.name) {
                 res.status(400).json({ message: `Ejercicio no válido: ${exerciseId}` });

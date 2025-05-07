@@ -14,6 +14,10 @@ export const addSavedRoutine = async (req: AuthRequest, res: Response): Promise<
         }
 
         const routineId = parseInt(req.params.routineId);
+        if (isNaN(routineId)) {
+            res.status(400).json({ message: 'ID de rutina inválido' });
+            return;
+        }
 
         const routineRepo = AppDataSource.getRepository(Routine);
         const savedRepo = AppDataSource.getRepository(SavedRoutine);
@@ -25,6 +29,11 @@ export const addSavedRoutine = async (req: AuthRequest, res: Response): Promise<
 
         if (!routine || !routine.isPublic) {
             res.status(404).json({ message: 'Rutina no encontrada o no pública' });
+            return;
+        }
+
+        if (routine.owner.id === userId) {
+            res.status(400).json({ message: 'No puedes guardar tu propia rutina' });
             return;
         }
 
@@ -59,6 +68,10 @@ export const removeSavedRoutine = async (req: AuthRequest, res: Response): Promi
     try {
         const userId = req.userId;
         const routineId = parseInt(req.params.routineId);
+        if (isNaN(routineId)) {
+            res.status(400).json({ message: 'ID de rutina inválido' });
+            return;
+        }
 
         const savedRepo = AppDataSource.getRepository(SavedRoutine);
         const existing = await savedRepo.findOne({

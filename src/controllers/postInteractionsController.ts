@@ -16,6 +16,10 @@ export const likePost = async (req: AuthRequest, res: Response): Promise<void> =
         }
 
         const postId = parseInt(req.params.postId);
+        if (isNaN(postId)) {
+            res.status(400).json({ message: 'ID de post inválido' });
+            return;
+        }
 
         const post = await AppDataSource.getRepository(Post).findOne({ 
             where: { id: postId },
@@ -55,6 +59,10 @@ export const unlikePost = async (req: AuthRequest, res: Response): Promise<void>
     try {
         const userId = req.userId;
         const postId = parseInt(req.params.postId);
+        if (isNaN(postId)) {
+            res.status(400).json({ message: 'ID de post inválido' });
+            return;
+        }
 
         const likeRepo = AppDataSource.getRepository(PostLike);
         const existing = await likeRepo.findOne({
@@ -78,6 +86,10 @@ export const checkPostLiked = async (req: AuthRequest, res: Response): Promise<v
     try {
         const userId = req.userId;
         const postId = parseInt(req.params.postId);
+        if (isNaN(postId)) {
+            res.status(400).json({ message: 'ID de post inválido' });
+            return;
+        }
 
         const like = await AppDataSource.getRepository(PostLike).findOne({
             where: { user: { id: userId }, post: { id: postId } },
@@ -99,6 +111,10 @@ export const savePost = async (req: AuthRequest, res: Response): Promise<void> =
         }
 
         const postId = parseInt(req.params.postId);
+        if (isNaN(postId)) {
+            res.status(400).json({ message: 'ID de post inválido' });
+            return;
+        }
         
         const post = await AppDataSource.getRepository(Post).findOne({ 
             where: { id: postId },
@@ -139,6 +155,11 @@ export const unsavePost = async (req: AuthRequest, res: Response): Promise<void>
         const userId = req.userId;
         const postId = parseInt(req.params.postId);
 
+        if (isNaN(postId)) {
+            res.status(400).json({ message: 'ID de post inválido' });
+            return;
+        }
+
         const repo = AppDataSource.getRepository(PostSaved);
         const existing = await repo.findOne({
             where: { user: { id: userId }, post: { id: postId } },
@@ -161,6 +182,10 @@ export const checkPostSaved = async (req: AuthRequest, res: Response): Promise<v
     try {
         const userId = req.userId;
         const postId = parseInt(req.params.postId);
+        if (isNaN(postId)) {
+            res.status(400).json({ message: 'ID de post inválido' });
+            return;
+        }
 
         const saved = await AppDataSource.getRepository(PostSaved).findOne({
         where: { user: { id: userId }, post: { id: postId } },
@@ -212,6 +237,11 @@ export const getSavedPosts = async (req: AuthRequest, res: Response): Promise<vo
 export const getLikesCountForPost = async (req: Request, res: Response): Promise<void> => {
     try {
         const postId = parseInt(req.params.postId);
+        if (isNaN(postId)) {
+            res.status(400).json({ message: 'ID de post inválido' });
+            return;
+        }
+
         const count = await AppDataSource.getRepository(PostLike).count({
             where: { post: { id: postId } },
         });
@@ -226,6 +256,11 @@ export const getLikesCountForPost = async (req: Request, res: Response): Promise
 export const getSavesCountForPost = async (req: Request, res: Response): Promise<void> => {
     try {
         const postId = parseInt(req.params.postId);
+        if (isNaN(postId)) {
+            res.status(400).json({ message: 'ID de post inválido' });
+            return;
+        }
+        
         const count = await AppDataSource.getRepository(PostSaved).count({
             where: { post: { id: postId } },
         });

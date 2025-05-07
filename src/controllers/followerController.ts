@@ -1,8 +1,15 @@
 import { Request, Response } from "express";
-import { AppDataSource } from "../data-source";
-import { Follower } from "../entities/Follower";
-import { User } from "../entities/User";
 import { AuthRequest } from "../middlewares/authMiddleware";
+import { 
+    isUserExists,
+    isAlreadyFollowing,
+    createFollow,
+    removeFollow,
+    getFollowersOfUser,
+    getFollowingOfUser,
+    getFollowersCountByUserId,
+    getFollowingCountByUserId
+} from "../services/followerService";
 import { createNotification } from "../services/notificationService";
 
 export const followUser = async (req: AuthRequest, res: Response): Promise<void> => {
@@ -12,7 +19,6 @@ export const followUser = async (req: AuthRequest, res: Response): Promise<void>
             res.status(401).json({ message: 'No autorizado' });
             return;
         }
-
         const targetId = parseInt(req.params.id);
 
         if (userId === targetId) {
@@ -20,33 +26,21 @@ export const followUser = async (req: AuthRequest, res: Response): Promise<void>
             return;
         }
 
-        const userRepo = AppDataSource.getRepository(User);
-        const followerRepo = AppDataSource.getRepository(Follower);
-
-        const targetUser = await userRepo.findOneBy({ id: targetId });
-        if (!targetUser) {
+        const exists = await isUserExists(targetId);
+        if (!exists) {
             res.status(404).json({ message: 'Usuario a seguir no encontrado' });
             return;
         }
 
-        const existingFollow = await followerRepo.findOne({
-            where: { follower: { id: userId }, following: { id: targetId } },
-        });
-
-        if (existingFollow) {
+        const already = await isAlreadyFollowing(userId, targetId);
+        if (already) {
             res.status(400).json({ message: 'Ya sigues a este usuario' });
             return;
         }
 
-        const follower = followerRepo.create({
-            follower: { id: userId },
-            following: { id: targetId },
-        });
-
-        await followerRepo.save(follower);
-
+        await createFollow(userId, targetId);
         await createNotification(targetId, userId, 'te ha empezado a seguir');
-        
+
         res.status(201).json({ message: 'Ahora sigues a este usuario' });
     } catch (error) {
         console.error('Error en followUser:', error);
@@ -57,20 +51,19 @@ export const followUser = async (req: AuthRequest, res: Response): Promise<void>
 export const unfollowUser = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
         const userId = req.userId;
+        if (!userId) {
+            res.status(401).json({ message: 'No autorizado' });
+            return;
+        }
         const targetId = parseInt(req.params.id);
 
-        const followerRepo = AppDataSource.getRepository(Follower);
-
-        const existingFollow = await followerRepo.findOne({
-            where: { follower: { id: userId }, following: { id: targetId } },
-        });
-
-        if (!existingFollow) {
+        const already = await isAlreadyFollowing(userId, targetId);
+        if (!already) {
             res.status(400).json({ message: 'No estás siguiendo a este usuario' });
             return;
         }
 
-        await followerRepo.remove(existingFollow);
+        await removeFollow(userId, targetId);
         res.status(200).json({ message: 'Has dejado de seguir al usuario' });
     } catch (error) {
         console.error('Error en unfollowUser:', error);
@@ -81,15 +74,12 @@ export const unfollowUser = async (req: AuthRequest, res: Response): Promise<voi
 export const getFollowers = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
         const userId = req.userId;
-        const repo = AppDataSource.getRepository(Follower);
-
-        const followers = await repo.find({
-            where: { following: { id: userId } },
-            relations: ['follower'],
-        });
-
-        const result = followers.map((f) => f.follower);
-        res.status(200).json(result);
+        if (!userId) {
+            res.status(401).json({ message: 'No autorizado' });
+            return;
+        }
+        const followers = await getFollowersOfUser(userId);
+        res.status(200).json(followers);
     } catch (error) {
         console.error('Error en getFollowers:', error);
         res.status(500).json({ message: 'Error al obtener seguidores' });
@@ -99,15 +89,12 @@ export const getFollowers = async (req: AuthRequest, res: Response): Promise<voi
 export const getFollowing = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
         const userId = req.userId;
-        const repo = AppDataSource.getRepository(Follower);
-
-        const following = await repo.find({
-            where: { follower: { id: userId } },
-            relations: ['following'],
-        });
-
-        const result = following.map((f) => f.following);
-        res.status(200).json(result);
+        if (!userId) {
+            res.status(401).json({ message: 'No autorizado' });
+            return;
+        }
+        const following = await getFollowingOfUser(userId);
+        res.status(200).json(following);
     } catch (error) {
         console.error('Error en getFollowing:', error);
         res.status(500).json({ message: 'Error al obtener seguidos' });
@@ -117,12 +104,11 @@ export const getFollowing = async (req: AuthRequest, res: Response): Promise<voi
 export const getFollowersCount = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
         const userId = req.userId;
-        const repo = AppDataSource.getRepository(Follower);
-
-        const count = await repo.count({
-            where: { following: { id: userId } },
-        });
-
+        if (!userId) {
+            res.status(401).json({ message: 'No autorizado' });
+            return;
+        }
+        const count = await getFollowersCountByUserId(userId);
         res.status(200).json({ followers: count });
     } catch (error) {
         console.error('Error en getFollowersCount:', error);
@@ -133,12 +119,11 @@ export const getFollowersCount = async (req: AuthRequest, res: Response): Promis
 export const getFollowingCount = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
         const userId = req.userId;
-        const repo = AppDataSource.getRepository(Follower);
-
-        const count = await repo.count({
-            where: { follower: { id: userId } },
-        });
-
+        if (!userId) {
+            res.status(401).json({ message: 'No autorizado' });
+            return;
+        }
+        const count = await getFollowingCountByUserId(userId);
         res.status(200).json({ following: count });
     } catch (error) {
         console.error('Error en getFollowingCount:', error);

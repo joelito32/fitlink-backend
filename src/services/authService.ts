@@ -36,6 +36,10 @@ export const registerUser = async ({
         return { success: false, message: 'Nombre de usuario no válido' };
     }
 
+    if (username.length > 20) {
+        return { success: false, message: 'El nombre de usuario no puede tener más de 20 carácteres.'};
+    }
+
     if (!isValidPassword(password)) {
         return {
             success: false,
