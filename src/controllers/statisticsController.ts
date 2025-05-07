@@ -59,7 +59,7 @@ export const getStatistics = async (req: AuthRequest, res: Response): Promise<vo
         }
 
         for (const p of performances) {
-            const max = Math.max(...p.weights.map(Number));
+            const max = p.weights.length > 0 ? Math.max(...p.weights.map(Number)) : 0;
             bestLiftPerExercise[p.exerciseId] = Math.max(bestLiftPerExercise[p.exerciseId] || 0, max);
         }
 
@@ -142,3 +142,75 @@ function getWeekNumber(date: Date): number {
     const pastDays = Math.floor((+date - +firstJan) / (1000 * 60 * 60 * 24));
     return Math.ceil((pastDays + firstJan.getDay() + 1) / 7);
 }
+
+export const getExerciseImprovementStats = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+        const userId = req.userId;
+        const showAll = req.query.all === 'true';
+
+        const repo = AppDataSource.getRepository(ExercisePerformance);
+
+        const performances = await repo
+            .createQueryBuilder('performance')
+            .leftJoin('performance.trainingLog', 'trainingLog')
+            .leftJoin('trainingLog.user', 'user')
+            .where('user.id = :userId', { userId })
+            .orderBy('performance.id', 'ASC')
+            .getMany();
+
+        const grouped: Record<string, { name: string; entries: { date: string; weight: number }[] }> = {};
+
+        for (const perf of performances) {
+            const weight = perf.isBodyweight
+                ? perf.trainingLog.user.weight ?? 0
+                : Math.max(...perf.weights);
+
+            if (!grouped[perf.exerciseId]) {
+                grouped[perf.exerciseId] = {
+                    name: perf.name,
+                    entries: [],
+            };
+            }
+
+            grouped[perf.exerciseId].entries.push({
+                date: perf.trainingLog.startedAt.toISOString().split('T')[0],
+                weight,
+            });
+        }
+
+        const results = Object.entries(grouped).map(([exerciseId, data]) => {
+            const weights = data.entries.map(e => e.weight);
+            const first = weights[0];
+            const last = weights[weights.length - 1];
+            const improvement = first > 0 ? ((last - first) / first) * 100 : 0;
+
+            return {
+                exerciseId,
+                name: data.name,
+                firstWeight: first,
+                lastWeight: last,
+                improvement: parseFloat(improvement.toFixed(2)),
+                progress: data.entries,
+            };
+        });
+
+        if (!showAll) {
+            const top5 = results
+                .sort((a, b) => b.improvement - a.improvement)
+                .slice(0, 5)
+                .map(({ exerciseId, name, improvement }) => ({
+                    exerciseId,
+                    name,
+                    improvement,
+                }));
+
+            res.status(200).json(top5);
+            return;
+        }
+
+        res.status(200).json(results);
+    } catch (error) {
+        console.error('Error en estadísticas de mejora de ejercicios:', error);
+        res.status(500).json({ message: 'Error interno' });
+    }
+};
