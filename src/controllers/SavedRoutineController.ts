@@ -1,9 +1,12 @@
-import { Response } from 'express';
-import { AppDataSource } from '../data-source';
-import { AuthRequest } from '../middlewares/authMiddleware';
-import { Routine } from '../entities/Routine';
-import { SavedRoutine } from '../entities/SavedRoutine';
-import { createNotification } from '../services/notificationService';
+import { Response } from "express";
+import { AuthRequest } from "../middlewares/authMiddleware";
+import { 
+    findRoutineWithOwner,
+    hasUserSavedRoutine,
+    saveRoutineForUser,
+    removeSavedRoutineForUser,
+    getSavedRoutinesForUser
+} from "../services/savedRoutineService";
 
 export const addSavedRoutine = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
@@ -19,14 +22,7 @@ export const addSavedRoutine = async (req: AuthRequest, res: Response): Promise<
             return;
         }
 
-        const routineRepo = AppDataSource.getRepository(Routine);
-        const savedRepo = AppDataSource.getRepository(SavedRoutine);
-
-        const routine = await routineRepo.findOne({ 
-            where: { id: routineId },
-            relations: ['owner'],
-        });
-
+        const routine = await findRoutineWithOwner(routineId);
         if (!routine || !routine.isPublic) {
             res.status(404).json({ message: 'Rutina no encontrada o no pública' });
             return;
@@ -37,26 +33,13 @@ export const addSavedRoutine = async (req: AuthRequest, res: Response): Promise<
             return;
         }
 
-        const existing = await savedRepo.findOne({
-            where: { user: { id: userId }, routine: { id: routineId } },
-        });
-
-        if (existing) {
+        const alreadySaved = await hasUserSavedRoutine(userId, routineId);
+        if (alreadySaved) {
             res.status(400).json({ message: 'Ya has guardado esta rutina' });
             return;
         }
 
-        const saved = savedRepo.create({
-            user: { id: userId },
-            routine,
-        });
-
-        await savedRepo.save(saved);
-
-        if (routine.owner.id !== userId) {
-            await createNotification(routine.owner.id, userId, 'ha guardado tu rutina');
-        }
-
+        await saveRoutineForUser(userId, routine);
         res.status(201).json({ message: 'Rutina guardada' });
     } catch (error) {
         console.error('Error al guardar rutina:', error);
@@ -67,23 +50,23 @@ export const addSavedRoutine = async (req: AuthRequest, res: Response): Promise<
 export const removeSavedRoutine = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
         const userId = req.userId;
+        if (!userId) {
+            res.status(401).json({ message: 'No autorizado' });
+            return;
+        }
+
         const routineId = parseInt(req.params.routineId);
         if (isNaN(routineId)) {
             res.status(400).json({ message: 'ID de rutina inválido' });
             return;
         }
 
-        const savedRepo = AppDataSource.getRepository(SavedRoutine);
-        const existing = await savedRepo.findOne({
-            where: { user: { id: userId }, routine: { id: routineId } },
-        });
-
-        if (!existing) {
+        const removed = await removeSavedRoutineForUser(userId, routineId);
+        if (!removed) {
             res.status(400).json({ message: 'No habías guardado esta rutina' });
             return;
         }
 
-        await savedRepo.remove(existing);
         res.status(200).json({ message: 'Rutina desguardada' });
     } catch (error) {
         console.error('Error al quitar rutina guardada:', error);
@@ -94,14 +77,12 @@ export const removeSavedRoutine = async (req: AuthRequest, res: Response): Promi
 export const getSavedRoutines = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
         const userId = req.userId;
+        if (!userId) {
+            res.status(401).json({ message: 'No autorizado' });
+            return;
+        }
 
-        const saved = await AppDataSource.getRepository(SavedRoutine).find({
-            where: { user: { id: userId } },
-            relations: ['routine', 'routine.owner'],
-            order: { id: 'DESC' },
-        });
-
-        const routines = saved.map(s => s.routine);
+        const routines = await getSavedRoutinesForUser(userId);
         res.status(200).json(routines);
     } catch (error) {
         console.error('Error al obtener rutinas guardadas:', error);

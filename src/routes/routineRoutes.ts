@@ -5,6 +5,7 @@ import {
     updateRoutine, 
     deleteRoutine,
     getPublicRoutinesFromFollowedUsers,
+    setRoutineVisibility,
 } from '../controllers/routineController';
 import { authMiddleware } from '../middlewares/authMiddleware';
 
@@ -17,5 +18,6 @@ router.get('/', getRoutines);
 router.get('/feed', getPublicRoutinesFromFollowedUsers);
 router.put('/:id', updateRoutine);
 router.delete('/:id', deleteRoutine);
+router.patch('/:id/visibility', setRoutineVisibility);
 
 export default router;
