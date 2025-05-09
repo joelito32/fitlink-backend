@@ -1,4 +1,4 @@
-import { Response, Request } from "express";
+import { Response } from "express";
 import { AuthRequest } from "../middlewares/authMiddleware";
 import {
     createRoutineForUser,

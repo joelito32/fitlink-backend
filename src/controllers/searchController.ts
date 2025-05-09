@@ -1,8 +1,9 @@
 import { Request, Response } from "express";
-import { AppDataSource } from "../data-source";
-import { User } from "../entities/User";
-import { Post } from "../entities/Post";
-import { Routine } from "../entities/Routine";
+import {
+    searchUsers,
+    searchPosts,
+    searchPublicRoutines,
+} from "../services/searchService";
 
 export const search = async (req: Request, res: Response): Promise<void> => {
     try {
@@ -13,33 +14,18 @@ export const search = async (req: Request, res: Response): Promise<void> => {
             return;
         }
 
-        const results: any = {};
+        const results: Record<string, any> = {};
 
         if (!type || type === 'user') {
-            const userRepo = AppDataSource.getRepository(User);
-            results.users = await userRepo
-                .createQueryBuilder('user')
-                .where('user.username ILIKE :q OR user.name ILIKE :q', { q: `%${q}%` })
-                .select(['user.id', 'user.usename', 'user.name', 'user.profilePic'])
-                .getMany();
+            results.users = await searchUsers(q);
         }
 
         if (!type || type === 'post') {
-            const postRepo = AppDataSource.getRepository(Post);
-            results.posts = await postRepo
-                .createQueryBuilder('post')
-                .leftJoinAndSelect('post.author', 'author')
-                .where('post.content ILIKE :q', { q: `%${q}%` })
-                .getMany();
+            results.posts = await searchPosts(q);
         }
 
         if (!type || type === 'routine') {
-            const routineRepo = AppDataSource.getRepository(Routine);
-            results.routines = await routineRepo
-                .createQueryBuilder('routine')
-                .leftJoinAndSelect('routine.owner', 'owner')
-                .where('routine.isPublic = true AND (routine.title ILIKE :q OR routine.description ILIKE :q', { q: `%${q}%` })
-                .getMany();
+            results.routines = await searchPublicRoutines(q);
         }
 
         res.status(200).json(results);

@@ -21,3 +21,20 @@ export const createNotification = async (
         console.error('Error al crear notificación:', error);
     }
 };
+
+export const getUserNotifications = async (userId: number): Promise<Notification[]> => {
+    return await AppDataSource.getRepository(Notification).find({
+        where: { recipient: { id: userId } },
+        relations: ['sender'],
+        order: { createdAt: 'DESC' },
+    });
+};
+
+export const markUserNotificationsAsRead = async (userId: number): Promise<void> => {
+    await AppDataSource.getRepository(Notification)
+        .createQueryBuilder()
+        .update()
+        .set({ read: true })
+        .where('recipientId = :userId', { userId })
+        .execute();
+};

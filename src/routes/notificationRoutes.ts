@@ -10,6 +10,6 @@ const router = Router();
 router.use(authMiddleware);
 
 router.get('/', getNotifications);
-router.patch('/read-all', markAllAsRead);
+router.put('/read-all', markAllAsRead);
 
 export default router;

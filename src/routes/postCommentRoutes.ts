@@ -18,15 +18,16 @@ router.use(authMiddleware);
 router.post('/', createComment);
 router.delete('/:commentId', deleteComment);
 
-router.post('/like/:commentId', likeComment);
-router.delete('/like/:commentId', unlikeComment);
-router.get('/like/:commentId', checkCommentLike);
+router.post('/:commentId/like', likeComment);
+router.delete('/:commentId/like', unlikeComment);
+
+router.get('/:commentId/like', checkCommentLike);
 
 router.get('/post/:postId', getCommentsByPostId);
 
-router.get('/replies/:commentId', getRepliesForComment);
+router.get('/:commentId/replies', getRepliesForComment);
 
-router.get('/count/:postId', getCommentCountForPost);
-router.get('/likes-count/:commentId', getLikesCountForComment);
+router.get('/post/:postId/count', getCommentCountForPost);
+router.get('/:commentId/likes/count', getLikesCountForComment);
 
 export default router;

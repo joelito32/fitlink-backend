@@ -16,17 +16,19 @@ import { authMiddleware } from "../middlewares/authMiddleware";
 const router = Router();
 router.use(authMiddleware);
 
-router.post('/like/:postId', likePost);
-router.delete('/like/:postId', unlikePost);
-router.get('/like/:postId', checkPostLiked);
+router.post('/:postId/like', likePost);
+router.delete('/:postId/like', unlikePost);
+router.get('/:postId/like', checkPostLiked);
+
 router.get('/liked', getLikedPosts);
 
-router.post('/save/:postId', savePost);
-router.delete('/save/:postId', unsavePost);
-router.get('/save/:postId', checkPostSaved);
+router.post('/:postId/save', savePost);
+router.delete('/:postId/save', unsavePost);
+router.get('/:postId/save', checkPostSaved);
+
 router.get('/saved', getSavedPosts);
 
-router.get('/likes-count/:postId', getLikesCountForPost);
-router.get('/saves-count/:postId', getSavesCountForPost);
+router.get('/:postId/likes/count', getLikesCountForPost);
+router.get('/:postId/saves/count', getSavesCountForPost);
 
 export default router;

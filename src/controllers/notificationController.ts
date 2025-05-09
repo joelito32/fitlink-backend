@@ -1,18 +1,19 @@
 import { Response } from 'express';
-import { AppDataSource } from '../data-source';
 import { AuthRequest } from '../middlewares/authMiddleware';
-import { Notification } from '../entities/Notification';
+import {
+    getUserNotifications,
+    markUserNotificationsAsRead
+} from '../services/notificationService';
 
 export const getNotifications = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
         const userId = req.userId;
+        if (!userId) {
+            res.status(401).json({ message: 'No autorizado' });
+            return;
+        }
 
-        const notifications = await AppDataSource.getRepository(Notification).find({
-            where: { recipient: { id: userId } },
-            relations: ['sender'],
-            order: { createdAt: 'DESC' },
-        });
-
+        const notifications = await getUserNotifications(userId);
         res.status(200).json(notifications);
     } catch (error) {
         console.error('Error al obtener notificaciones:', error);
@@ -23,14 +24,12 @@ export const getNotifications = async (req: AuthRequest, res: Response): Promise
 export const markAllAsRead = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
         const userId = req.userId;
+        if (!userId) {
+            res.status(401).json({ message: 'No autorizado' });
+            return;
+        }
 
-        await AppDataSource.getRepository(Notification)
-        .createQueryBuilder()
-        .update()
-        .set({ read: true })
-        .where('recipientId = :userId', { userId })
-        .execute();
-
+        await markUserNotificationsAsRead(userId);
         res.status(200).json({ message: 'Notificaciones marcadas como leídas' });
     } catch (error) {
         console.error('Error al marcar como leídas:', error);

@@ -14,7 +14,7 @@ const router = Router();
 router.use(authMiddleware);
 
 router.post('/follow/:id', followUser);
-router.post('/unfollow/:id', unfollowUser);
+router.delete('/unfollow/:id', unfollowUser);
 
 router.get('/followers', getFollowers);
 router.get('/following', getFollowing);

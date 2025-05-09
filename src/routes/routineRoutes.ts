@@ -15,7 +15,7 @@ router.use(authMiddleware);
 
 router.post('/', createRoutine);
 router.get('/', getRoutines);
-router.get('/feed', getPublicRoutinesFromFollowedUsers);
+router.get('/feed/following', getPublicRoutinesFromFollowedUsers);
 router.put('/:id', updateRoutine);
 router.delete('/:id', deleteRoutine);
 router.patch('/:id/visibility', setRoutineVisibility);
