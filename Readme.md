@@ -1,155 +1,194 @@
-# 📘 API REST de FitLink
+# 📘 API de FitLink – Documentación de Rutas y Uso en Frontend
 
-Esta API permite la gestión de usuarios, rutinas, entrenamientos, posts, interacciones sociales y estadísticas de progreso. A continuación se detallan todas las rutas disponibles agrupadas por funcionalidad.
+## 📚 Uso de la API desde el Frontend
 
----
-
-## 🔐 Auth (/api/auth)
-
-| Método | Ruta          | Descripción                           |
-|--------|---------------|---------------------------------------|
-| POST   | /register     | Registra un nuevo usuario             |
-| POST   | /login        | Inicia sesión y devuelve el token     |
-| POST   | /logout       | Cierra sesión (cliente elimina token) |
+Todas las rutas comienzan con `/api`, ya que están montadas en el backend como `app.use('/api', routes)`.
 
 ---
 
-## 👤 Usuarios (/api/users)
+### 🔐 Autenticación (`/api/auth`)
 
-| Método | Ruta             | Descripción                                  |
-|--------|------------------|----------------------------------------------|
-| GET    | /me              | Devuelve el perfil del usuario autenticado   |
-| PUT    | /me              | Actualiza el perfil del usuario              |
-| GET    | /:id             | Devuelve el perfil público por ID            |
-| DELETE | /me              | Elimina la cuenta del usuario autenticado    |
+| Método | Ruta                 | Descripción                                                                            |
+|--------|----------------------|----------------------------------------------------------------------------------------|
+| POST   | `/api/auth/register` | Registra un nuevo usuario. Enviar `email`, `username`, `password` y `confirmPassword`. |
+| POST   | `/api/auth/login`    | Inicia sesión. Enviar `identifier` (email o username) y `password`. Devuelve un JWT.   |
+| POST   | `/api/auth/logout`   | Cierra sesión (elimina el token en el frontend manualmente).                           |
 
----
-
-## 👥 Seguidores (/api/followers)
-
-| Método | Ruta               | Descripción                                 |
-|--------|--------------------|---------------------------------------------|
-| POST   | /:id               | Seguir a un usuario                         |
-| DELETE | /:id               | Dejar de seguir a un usuario                |
-| GET    | /list/followers    | Listado de seguidores del usuario actual    |
-| GET    | /list/following    | Listado de seguidos por el usuario actual   |
-| GET    | /count/followers   | Número de seguidores                        |
-| GET    | /count/following   | Número de seguidos                          |
+**Uso frontend:**  
+- Guarda el token JWT en localStorage o cookies tras login.  
+- Añade el token a `Authorization: Bearer` en las siguientes rutas protegidas.
 
 ---
 
-## 🧠 Ejercicios (/api/exercises)
+### 👤 Usuarios (`/api/users`)
 
-| Método | Ruta        | Descripción                                          |
-|--------|-------------|------------------------------------------------------|
-| GET    | /           | Lista todos los ejercicios (filtrable por `?target`) |
-| GET    | /targets    | Devuelve todos los grupos musculares únicos          |
+| Método | Ruta                   | Descripción                                                      |
+|--------|------------------------|------------------------------------------------------------------|
+| GET    | `/api/users/me`        | Obtiene los datos del usuario autenticado.                       |
+| PUT    | `/api/users/me`        | Actualiza perfil (nombre, bio, fecha de nacimiento, peso, foto). |
+| GET    | `/api/users/:id`       | Obtiene el perfil público de otro usuario.                       |
+| DELETE | `/api/users/me`        | Elimina la cuenta del usuario actual.                            |
 
----
-
-## 📝 Rutinas (/api/routines)
-
-| Método | Ruta                      | Descripción                                        |
-|--------|---------------------------|----------------------------------------------------|
-| POST   | /                         | Crea una rutina nueva                              |
-| GET    | /                         | Devuelve las rutinas del usuario autenticado       |
-| PUT    | /:id                      | Actualiza una rutina propia                        |
-| DELETE | /:id                      | Elimina una rutina propia                          |
-| GET    | /public/following         | Rutinas públicas de los usuarios que sigo          |
-| PUT    | /visibility/:id           | Cambia visibilidad (pública/privada) de una rutina |
+**Uso frontend:**  
+- Mostrar perfil propio y editar.  
+- Ver perfiles públicos (rutas protegidas).
 
 ---
 
-## 💾 Rutinas Guardadas (/api/saved-routines)
+### 👥 Seguidores (`/api/followers`)
 
-| Método | Ruta             | Descripción                             |
-|--------|------------------|-----------------------------------------|
-| POST   | /:routineId      | Guardar una rutina pública              |
-| DELETE | /:routineId      | Eliminar rutina guardada                |
-| GET    | /                | Obtener rutinas guardadas               |
+| Método | Ruta                             | Descripción                                  |
+|--------|----------------------------------|----------------------------------------------|
+| POST   | `/api/followers/:id`             | Seguir a un usuario por su ID.               |
+| DELETE | `/api/followers/:id`             | Dejar de seguir a un usuario.                |
+| GET    | `/api/followers`                 | Lista de seguidores del usuario autenticado. |
+| GET    | `/api/followers/following`       | Lista de seguidos.                           |
+| GET    | `/api/followers/count`           | Número de seguidores.                        |
+| GET    | `/api/followers/following-count` | Número de seguidos.                          |
 
----
-
-## 🏋️‍♂️ Sesiones de Entrenamiento (/api/training-logs)
-
-| Método | Ruta      | Descripción                                    |
-|--------|-----------|------------------------------------------------|
-| POST   | /         | Registrar una nueva sesión                     |
-| GET    | /         | Listar todas las sesiones del usuario          |
-| GET    | /:id      | Obtener una sesión específica por ID           |
+**Uso frontend:**  
+- Botones "Seguir/Dejar de seguir", contadores, y páginas de seguidores/seguidos.
 
 ---
 
-## 📊 Estadísticas (/api/statistics)
+### 💪 Ejercicios (`/api/exercises`)
 
-| Método | Ruta                   | Descripción                                          |
-|--------|------------------------|------------------------------------------------------|
-| GET    | /                      | Estadísticas generales del usuario                   |
-| GET    | /improvement           | Mejora por ejercicio (top 5 o todos con `?all=true`) |
+| Método | Ruta                     | Descripción                                                       |
+|--------|--------------------------|-------------------------------------------------------------------|
+| GET    | `/api/exercises`         | Lista todos los ejercicios (puede filtrarse con `?target=pecho`). |
+| GET    | `/api/exercises/targets` | Lista todos los grupos musculares únicos.                         |
 
----
-
-## 📝 Posts (/api/posts)
-
-| Método | Ruta           | Descripción                                  |
-|--------|----------------|----------------------------------------------|
-| POST   | /              | Crear un nuevo post                          |
-| DELETE | /:id           | Eliminar un post propio                      |
-| GET    | /              | Obtener posts del feed (usuarios seguidos)   |
-| GET    | /user/:userId  | Obtener posts de un usuario específico       |
-| GET    | /:id           | Obtener un post con detalles                 |
+**Uso frontend:**  
+- Selector de ejercicios para crear o editar rutinas.
 
 ---
 
-## 💬 Comentarios (/api/comments)
+### 📋 Rutinas (`/api/routines`)
 
-| Método | Ruta                           | Descripción                               |
-|--------|--------------------------------|-------------------------------------------|
-| POST   | /                              | Crear comentario o respuesta en un post   |
-| DELETE | /:commentId                    | Eliminar comentario propio                |
-| POST   | /like/:commentId               | Dar like a un comentario                  |
-| DELETE | /like/:commentId               | Quitar like a un comentario               |
-| GET    | /like/:commentId               | Ver si el usuario dio like                |
-| GET    | /post/:postId                  | Comentarios de un post                    |
-| GET    | /replies/:commentId            | Respuestas a un comentario                |
-| GET    | /count/:postId                 | Número total de comentarios de un post    |
-| GET    | /likes/:commentId              | Número de likes de un comentario          |
+| Método | Ruta                             | Descripción                              |
+|--------|----------------------------------|------------------------------------------|
+| POST   | `/api/routines`                  | Crea una nueva rutina.                   |
+| GET    | `/api/routines`                  | Obtiene tus rutinas.                     |
+| PUT    | `/api/routines/:id`              | Actualiza una rutina propia.             |
+| DELETE | `/api/routines/:id`              | Elimina una rutina propia.               |
+| GET    | `/api/routines/following/public` | Rutinas públicas de usuarios que sigues. |
+| PATCH  | `/api/routines/:id/visibility`   | Cambia visibilidad pública/privada.      |
 
----
-
-## ❤️ Interacciones (/api/interactions)
-
-| Método | Ruta                     | Descripción                              |
-|--------|--------------------------|------------------------------------------|
-| POST   | /like/:postId            | Dar like a un post                       |
-| DELETE | /like/:postId            | Quitar like a un post                    |
-| GET    | /like/:postId            | Ver si el usuario dio like               |
-| POST   | /save/:postId            | Guardar un post                          |
-| DELETE | /save/:postId            | Quitar guardado                          |
-| GET    | /save/:postId            | Ver si el usuario guardó el post         |
-| GET    | /liked                   | Obtener posts que he dado like           |
-| GET    | /saved                   | Obtener posts que he guardado            |
-| GET    | /likes/:postId           | Número de likes de un post               |
-| GET    | /saves/:postId           | Número de guardados de un post           |
+**Uso frontend:**  
+- Crear/editar rutinas, feed de rutinas públicas, gestión de visibilidad.
 
 ---
 
-## 🔔 Notificaciones (/api/notifications)
+### ⭐ Rutinas guardadas (`/api/saved-routines`)
 
-| Método | Ruta     | Descripción                           |
-|--------|----------|---------------------------------------|
-| GET    | /        | Obtener notificaciones del usuario    |
-| PUT    | /read    | Marcar todas como leídas              |
+| Método | Ruta                             | Descripción                                |
+|--------|----------------------------------|--------------------------------------------|
+| POST   | `/api/saved-routines/:routineId` | Guarda una rutina pública de otro usuario. |
+| DELETE | `/api/saved-routines/:routineId` | Quita una rutina guardada.                 |
+| GET    | `/api/saved-routines`            | Lista las rutinas que has guardado.        |
 
----
-
-## 🔎 Búsqueda (/api/search)
-
-| Método | Ruta                           | Descripción                                  |
-|--------|--------------------------------|----------------------------------------------|
-| GET    | /?q=abc                        | Buscar en usuarios, posts y rutinas públicas |
-| GET    | /?q=abc&type=user/post/routine | Buscar por tipo específico                   |
+**Uso frontend:**  
+- Sección "rutinas favoritas".
 
 ---
 
-✅ Todas las rutas protegidas requieren autenticación con JWT.
+### 📝 Posts (`/api/posts`)
+
+| Método | Ruta                      | Descripción                                   |
+|--------|---------------------------|-----------------------------------------------|
+| POST   | `/api/posts`              | Crea un nuevo post con o sin rutina asociada. |
+| GET    | `/api/posts`              | Feed de posts de usuarios que sigues.         |
+| GET    | `/api/posts/:id`          | Obtiene un post individual.                   |
+| GET    | `/api/posts/user/:userId` | Posts de un usuario concreto.                 |
+| DELETE | `/api/posts/:id`          | Borra un post propio.                         |
+
+**Uso frontend:**  
+- Crear posts, ver feed, ver posts por usuario, borrar propios.
+
+---
+
+### 💬 Comentarios (`/api/comments`)
+
+| Método | Ruta                                | Descripción                             |
+|--------|-------------------------------------|-----------------------------------------|
+| POST   | `/api/comments`                     | Comentar o responder a un post.         |
+| DELETE | `/api/comments/:commentId`          | Borra un comentario propio.             |
+| POST   | `/api/comments/:commentId/like`     | Da like a un comentario.                |
+| DELETE | `/api/comments/:commentId/unlike`   | Quita el like.                          |
+| GET    | `/api/comments/:commentId/liked`    | Verifica si el usuario actual dio like. |
+| GET    | `/api/comments/post/:postId`        | Obtiene los comentarios de un post.     |
+| GET    | `/api/comments/:commentId/replies`  | Respuestas a un comentario.             |
+| GET    | `/api/comments/:commentId/likes`    | Nº de likes del comentario.             |
+| GET    | `/api/comments/post/:postId/count`  | Nº de comentarios en el post.           |
+
+**Uso frontend:**  
+- Comentarios en los posts, likes, respuestas, contadores.
+
+---
+
+### ❤️ Interacciones con posts (`/api/interactions`)
+
+| Método | Ruta                                    | Descripción            |
+|--------|-----------------------------------------|------------------------|
+| POST   | `/api/interactions/:postId/like`        | Like a un post.        |
+| DELETE | `/api/interactions/:postId/unlike`      | Quitar like.           |
+| GET    | `/api/interactions/:postId/liked`       | Saber si diste like.   |
+| POST   | `/api/interactions/:postId/save`        | Guardar un post.       |
+| DELETE | `/api/interactions/:postId/unsave`      | Quitar guardado.       |
+| GET    | `/api/interactions/:postId/saved`       | Saber si lo guardaste. |
+| GET    | `/api/interactions/liked`               | Tus posts liked.       |
+| GET    | `/api/interactions/saved`               | Tus posts guardados.   |
+| GET    | `/api/interactions/:postId/likes-count` | Nº de likes.           |
+| GET    | `/api/interactions/:postId/saves-count` | Nº de guardados.       |
+
+**Uso frontend:**  
+- Botones de interacción, pestañas de liked/saved posts.
+
+---
+
+### 🔔 Notificaciones (`/api/notifications`)
+
+| Método | Ruta                          | Descripción               |
+|--------|-------------------------------|---------------------------|
+| GET    | `/api/notifications`          | Lista tus notificaciones. |
+| PATCH  | `/api/notifications/read-all` | Marca todas como leídas.  |
+
+**Uso frontend:**  
+- Lista con notificaciones tipo red social + punto azul si hay nuevas.
+
+---
+
+### 🔍 Búsqueda (`/api/search`)
+
+| Método | Ruta                                       | Descripción                                                                          |
+|--------|--------------------------------------------|--------------------------------------------------------------------------------------|
+| GET    | `/api/search?q=...&type=user|post|routine` | Busca usuarios, posts o rutinas públicas. Si `type` no se especifica, busca en todo. |
+
+**Uso frontend:**  
+- Buscador general con filtros.
+
+---
+
+### 📈 Estadísticas (`/api/statistics`)
+
+| Método | Ruta                                  | Descripción                                                                    |
+|--------|---------------------------------------|--------------------------------------------------------------------------------|
+| GET    | `/api/statistics`                     | Devuelve estadísticas generales de entrenamiento. Opcional: `?exerciseId=...`. |
+| GET    | `/api/statistics/improvement`         | Mejora de ejercicios (top 5 por defecto).                                      |
+| GET    | `/api/statistics/improvement?all=true`| Mejora de todos los ejercicios.                                                |
+
+**Uso frontend:**  
+- Mostrar progreso, distribución muscular, evolución de peso, mejora por ejercicio.
+
+---
+
+### 🏋️‍♂️ Training Logs (`/api/training-logs`)
+
+| Método | Ruta                     | Descripción                                          |
+|--------|--------------------------|------------------------------------------------------|
+| POST   | `/api/training-logs`     | Registra una sesión con duración, ejercicios, pesos. |
+| GET    | `/api/training-logs`     | Lista todas las sesiones del usuario.                |
+| GET    | `/api/training-logs/:id` | Obtiene una sesión concreta. Solo si es del usuario. |
+
+**Uso frontend:**  
+- Registrar entrenamientos diarios, consultar historial y detalles.

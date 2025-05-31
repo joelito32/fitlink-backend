@@ -3,17 +3,23 @@ import express, { Request, Response, NextFunction } from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import helmet from 'helmet';
+import path from 'path';
 import { AppDataSource } from './data-source';
 import routes from './routes/index';
 
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 4000;
 
 app.use(express.json());
 app.use(cors());
 app.use(helmet());
+
+app.use('/uploads', (req, res, next) => {
+    res.setHeader('Access-Control-Allow-Origin', '*')
+    next()
+}, express.static(path.resolve('uploads')))
 
 app.use('/api', routes);
 

@@ -1,12 +1,15 @@
 import { AppDataSource } from "../data-source";
 import { User } from "../entities/User";
 import { WeightLog } from "../entities/WeightLog";
+import fs from 'fs';
+import path from 'path';
 
 interface ProfileData {
     name?: string;
     birthdate?: Date;
     bio?: string;
     profilePic?: string;
+    deletePhoto?: boolean;
     weight?: number;
 }
 
@@ -14,7 +17,7 @@ const DEFAULT_PROFILE_PIC = 'https://cdn-icons-png.flaticon.com/512/149/149071.p
 
 export const updateUserProfile = async (
     userId: number,
-    { name, birthdate, bio, profilePic, weight }: ProfileData
+    { name, birthdate, bio, profilePic,deletePhoto, weight }: ProfileData
 ): Promise<{ success: boolean; message: string }> => {
     const userRepo = AppDataSource.getRepository(User);
     const weightLogRepo = AppDataSource.getRepository(WeightLog);
@@ -56,13 +59,23 @@ export const updateUserProfile = async (
         }
     }
 
-    if (profilePic && !/^https?:\/\/.*\.(jpg|jpeg|png|webp|gif)$/.test(profilePic)) {
-        return { success: false, message: 'URL de imagen no válida para la foto de perfil' };
+    if (deletePhoto) {
+        if (user.profilePic && user.profilePic !== DEFAULT_PROFILE_PIC) {
+            const oldPath = path.resolve('uploads', path.basename(user.profilePic))
+            if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath)
+        }
+        user.profilePic = DEFAULT_PROFILE_PIC
+    } else if (profilePic && /.*\.(jpg|jpeg|png|webp|gif)$/.test(profilePic)) {
+        if (user.profilePic && user.profilePic !== DEFAULT_PROFILE_PIC) {
+            const oldPath = path.resolve('uploads', path.basename(user.profilePic))
+            if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath)
+        }
+        user.profilePic = profilePic
     }
 
-    user.name = name ?? user.name;
-    user.bio = bio ?? user.bio;
-    user.profilePic = profilePic || DEFAULT_PROFILE_PIC;
+    if (name) user.name = name;
+    if (bio !== undefined) user.bio = bio;
+    if (profilePic) user.profilePic = profilePic;
 
     await userRepo.save(user);
 

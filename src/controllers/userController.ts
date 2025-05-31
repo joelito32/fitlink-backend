@@ -10,7 +10,11 @@ export const updateProfile = async (req: AuthRequest, res: Response): Promise<vo
             return;
         }
 
-        const { name, birthdate, bio, profilePic, weight } = req.body;
+        const { name, birthdate, bio, weight } = req.body;
+        const file = req.file;
+        const profilePic = file ? `/uploads/${file.filename}` : req.body.profilePic;
+        const deletePhoto = req.body.deletePhoto === 'true';
+
 
         const result = await updateUserProfile(userId, {
             name,
@@ -18,6 +22,7 @@ export const updateProfile = async (req: AuthRequest, res: Response): Promise<vo
             bio,
             profilePic,
             weight,
+            deletePhoto,
         });
 
         if (!result.success) {
