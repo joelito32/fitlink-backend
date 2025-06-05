@@ -13,7 +13,6 @@ import postInteractionsRoutes from './postInteractionsRoutes';
 import postCommentRoutes from './postCommentRoutes';
 import notificationRoutes from './notificationRoutes';
 import searchRoutes from './searchRoutes';
-import ejerciciosRoutes from './ejerciciosRoutes';
 
 const router = Router();
 
@@ -30,6 +29,5 @@ router.use('/interactions', postInteractionsRoutes);
 router.use('/comments', postCommentRoutes);
 router.use('/notifications', notificationRoutes);
 router.use('/search', searchRoutes);
-router.use('/ejercicios', ejerciciosRoutes);
 
 export default router;

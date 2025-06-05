@@ -15,6 +15,7 @@ import { SavedRoutine } from './entities/SavedRoutine';
 import { TrainingLog } from './entities/TrainingLog';
 import { User } from './entities/User';
 import { WeightLog } from './entities/WeightLog';
+import { Exercise } from './entities/Exercise';
 
 dotenv.config();
 
@@ -42,7 +43,9 @@ export const AppDataSource = new DataSource({
         SavedRoutine, 
         TrainingLog, 
         User, 
-        WeightLog],
+        WeightLog,
+        Exercise
+    ],
     migrations: [],
     subscribers: [],
 });

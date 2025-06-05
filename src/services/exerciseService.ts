@@ -1,36 +1,76 @@
-import axios from 'axios';
+import { AppDataSource } from '../data-source';
+import { Exercise } from '../entities/Exercise';
+import { buildPaginationResponse } from '../utils/pagination';
 
-const BASE_URL = 'https://exercisedb.p.rapidapi.com/exercises?limit=10&offset=0';
-const API_KEY = process.env.EXERCISEDB_API_KEY || '';
-const API_HOST = 'exercisedb.p.rapidapi.com';
+const exerciseRepository = AppDataSource.getRepository(Exercise);
 
-export const fetchAllExercises = async () => {
-    const response = await axios.get(BASE_URL, {
-        headers: {
-            'X-RapidAPI-Key': API_KEY,
-            'X-RapidAPI-Host': API_HOST,
-        },
+export const fetchAllExercises = async (page: number): Promise<any> => {
+    const take = 10;
+    const skip = (page - 1) * take;
+
+    const [data, total] = await exerciseRepository.findAndCount({
+        order: { id: 'ASC' },
+        skip,
+        take,
     });
 
-    return response.data;
+    return buildPaginationResponse(data, total, page, take);
 };
 
-export const getExerciseById = async (id: string) => {
-    const all = await fetchAllExercises();
-    return all.find((e: any) => e.id === id) || null;
+export const getExerciseById = async (id: string): Promise<Exercise | null> => {
+    return await exerciseRepository.findOneBy({ id });
 };
 
-export const filterExercisesByTarget = (exercises: any[], target?: string): any[] => {
-    if (!target) return exercises;
-    return exercises.filter(e => e.target?.toLowerCase() === target.toLowerCase());
+export const filterExercisesByTarget = async (target: string, page: number): Promise<any> => {
+    const take = 10;
+    const skip = (page - 1) * take;
+
+    const [data, total] = await exerciseRepository.findAndCount({
+        where: {
+            target: target.toLowerCase(),
+        },
+        order: { id: 'ASC' },
+        skip,
+        take,
+    });
+
+    return buildPaginationResponse(data, total, page, take);
 };
 
-export const getSortedTargets = (exercises: any[]): string[] => {
+
+export const getSortedTargets = async (): Promise<string[]> => {
+    const allExercises = await exerciseRepository.find(); // sin paginación
+
     const targetsSet = new Set<string>();
-    exercises.forEach(e => {
+    allExercises.forEach(e => {
         if (e.target) {
             targetsSet.add(e.target.toLowerCase());
         }
     });
+
     return Array.from(targetsSet).sort();
+};
+
+
+export const searchExercises = async (query: string, page: number): Promise<any> => {
+    const take = 10;
+    const skip = (page - 1) * take;
+    const formattedQuery = `%${query.toLowerCase()}%`;
+
+    const [data, total] = await exerciseRepository
+        .createQueryBuilder('exercise')
+        .where('LOWER(exercise.name) LIKE :query', { query: formattedQuery })
+        .orWhere('LOWER(exercise.bodyPart) LIKE :query', { query: formattedQuery })
+        .orWhere('LOWER(exercise.equipment) LIKE :query', { query: formattedQuery })
+        .orWhere('LOWER(exercise.target) LIKE :query', { query: formattedQuery })
+        .orWhere(`EXISTS (
+            SELECT 1 FROM unnest(exercise.secondaryMuscles) AS sm
+            WHERE LOWER(sm) LIKE :query
+        )`, { query: formattedQuery })
+        .orderBy('exercise.id', 'ASC')
+        .skip(skip)
+        .take(take)
+        .getManyAndCount();
+
+    return buildPaginationResponse(data, total, page, take);
 };
