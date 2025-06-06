@@ -17,7 +17,7 @@ export const fetchAllExercises = async (page: number): Promise<any> => {
     return buildPaginationResponse(data, total, page, take);
 };
 
-export const getExerciseById = async (id: string): Promise<Exercise | null> => {
+export const fetchExerciseById = async (id: string): Promise<Exercise | null> => {
     return await exerciseRepository.findOneBy({ id });
 };
 

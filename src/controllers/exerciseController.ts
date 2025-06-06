@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { fetchAllExercises, filterExercisesByTarget, getSortedTargets, searchExercises } from '../services/exerciseService';
+import { fetchAllExercises, filterExercisesByTarget, getSortedTargets, searchExercises, fetchExerciseById } from '../services/exerciseService';
 
 export const getAllExercises = async (req: Request, res: Response): Promise<void> => {
     try {
@@ -17,7 +17,22 @@ export const getAllExercises = async (req: Request, res: Response): Promise<void
     }
 };
 
+export const getExerciseById = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const id = req.params.id;
+        const exercise = await fetchExerciseById(id);
 
+        if (!exercise) {
+            res.status(404).json({ message: 'Ejercicio no encontrado' });
+            return
+        }
+
+        res.status(200).json(exercise);
+    } catch (error) {
+        console.error('Error al obtener ejercicio por ID:', error);
+        res.status(500).json({ message: 'Error interno del servidor' });
+    }
+};
 
 export const getTargets = async (req: Request, res: Response): Promise<void> => {
     try {
