@@ -1,7 +1,7 @@
 import { AppDataSource } from '../data-source';
 import { Routine } from '../entities/Routine';
 import { ExerciseLog } from '../entities/ExerciseLog';
-import { getExerciseById } from './exerciseService';
+import { fetchExerciseById } from './exerciseService';
 
 export const validateAndBuildExercises = async (
     exercises: any[]
@@ -12,7 +12,7 @@ export const validateAndBuildExercises = async (
         const { exerciseId, sets, reps } = e;
         if (!exerciseId || sets <= 0 || reps <= 0) return null;
 
-        const apiExercise = await getExerciseById(exerciseId);
+        const apiExercise = await fetchExerciseById(exerciseId);
         if (!apiExercise || !apiExercise.name) return null;
 
         const log = new ExerciseLog();
