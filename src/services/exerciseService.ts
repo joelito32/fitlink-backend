@@ -1,6 +1,7 @@
 import { AppDataSource } from '../data-source';
 import { Exercise } from '../entities/Exercise';
 import { buildPaginationResponse } from '../utils/pagination';
+import { ILike } from 'typeorm';
 
 const exerciseRepository = AppDataSource.getRepository(Exercise);
 
@@ -20,23 +21,6 @@ export const fetchAllExercises = async (page: number): Promise<any> => {
 export const fetchExerciseById = async (id: string): Promise<Exercise | null> => {
     return await exerciseRepository.findOneBy({ id });
 };
-
-export const filterExercisesByTarget = async (target: string, page: number): Promise<any> => {
-    const take = 10;
-    const skip = (page - 1) * take;
-
-    const [data, total] = await exerciseRepository.findAndCount({
-        where: {
-            target: target.toLowerCase(),
-        },
-        order: { id: 'ASC' },
-        skip,
-        take,
-    });
-
-    return buildPaginationResponse(data, total, page, take);
-};
-
 
 export const getSortedTargets = async (): Promise<string[]> => {
     const allExercises = await exerciseRepository.find(); // sin paginación
@@ -71,6 +55,22 @@ export const searchExercises = async (query: string, page: number): Promise<any>
         .skip(skip)
         .take(take)
         .getManyAndCount();
+
+    return buildPaginationResponse(data, total, page, take);
+};
+
+export const filterExercisesByTarget = async (target: string, page: number): Promise<any> => {
+    const take = 10;
+    const skip = (page - 1) * take;
+
+    const [data, total] = await exerciseRepository.findAndCount({
+        where: {
+            target: ILike(target),
+        },
+        order: { id: 'ASC' },
+        skip,
+        take,
+    });
 
     return buildPaginationResponse(data, total, page, take);
 };
