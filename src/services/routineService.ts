@@ -31,7 +31,8 @@ export const createRoutineForUser = async (
     userId: number,
     title: string,
     description: string,
-    exercises: ExerciseLog[]
+    exercises: ExerciseLog[],
+    isPublic: boolean,
 ): Promise<Routine> => {
     const repo = AppDataSource.getRepository(Routine);
     const routine = repo.create({
@@ -39,6 +40,7 @@ export const createRoutineForUser = async (
         description,
         owner: { id: userId },
         exercises,
+        isPublic,
     });
 
     return await repo.save(routine);
@@ -47,7 +49,7 @@ export const createRoutineForUser = async (
 export const getUserRoutines = async (userId: number): Promise<Routine[]> => {
     return await AppDataSource.getRepository(Routine).find({
         where: { owner: { id: userId } },
-        relations: ['exercises'],
+        relations: ['exercises', 'owner'],
         order: { createdAt: 'DESC' },
     });
 };
@@ -65,11 +67,13 @@ export const updateRoutineData = async (
     routine: Routine,
     title: string,
     description: string,
-    exercises: ExerciseLog[]
+    exercises: ExerciseLog[],
+    isPublic: boolean,
 ): Promise<Routine> => {
     routine.title = title.trim();
     routine.description = description?.trim() || '';
     routine.exercises = exercises;
+    routine.isPublic = isPublic;
     return await AppDataSource.getRepository(Routine).save(routine);
 };
 

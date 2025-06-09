@@ -20,7 +20,7 @@ export const createRoutine = async (req: AuthRequest, res: Response): Promise<vo
         }
 
 
-        const { title, description, exercises } = req.body;
+        const { title, description, exercises, isPublic } = req.body;
 
         if (!title || typeof title !== "string" || !Array.isArray(exercises) || exercises.length === 0) {
             res.status(400).json({ message: "Faltan datos requeridos" });
@@ -43,7 +43,13 @@ export const createRoutine = async (req: AuthRequest, res: Response): Promise<vo
             return;
         }
 
-        const routine = await createRoutineForUser(userId, title.trim(), description?.trim(), validated);
+        const routine = await createRoutineForUser(
+            userId, 
+            title.trim(), 
+            description?.trim(), 
+            validated, 
+            Boolean(isPublic)
+        );
         res.status(201).json({ message: "Rutina creada correctamente", routine });
     } catch (error) {
         console.error("Error al crear rutina:", error);
@@ -72,7 +78,7 @@ export const updateRoutine = async (req: AuthRequest, res: Response): Promise<vo
     try {
         const userId = req.userId;
         const routineId = parseInt(req.params.id);
-        const { title, description, exercises } = req.body;
+        const { title, description, exercises, isPublic } = req.body;
 
         if (isNaN(routineId) || !title || typeof title !== "string" || !Array.isArray(exercises)) {
             res.status(400).json({ message: "Datos inválidos" });
@@ -101,7 +107,7 @@ export const updateRoutine = async (req: AuthRequest, res: Response): Promise<vo
             return;
         }
 
-        const updated = await updateRoutineData(routine, title, description, validated);
+        const updated = await updateRoutineData(routine, title, description, validated, isPublic);
         res.status(200).json({ message: "Rutina actualizada correctamente", routine: updated });
     } catch (error) {
         console.error("Error al actualizar rutina:", error);
