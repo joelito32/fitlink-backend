@@ -73,12 +73,12 @@ export const unfollowUser = async (req: AuthRequest, res: Response): Promise<voi
 
 export const getFollowers = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
-        const userId = req.userId;
-        if (!userId) {
+        const targetId = parseInt(req.params.id);
+        if (!targetId) {
             res.status(401).json({ message: 'No autorizado' });
             return;
         }
-        const followers = await getFollowersOfUser(userId);
+        const followers = await getFollowersOfUser(targetId);
         res.status(200).json(followers);
     } catch (error) {
         console.error('Error en getFollowers:', error);
@@ -88,12 +88,12 @@ export const getFollowers = async (req: AuthRequest, res: Response): Promise<voi
 
 export const getFollowing = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
-        const userId = req.userId;
-        if (!userId) {
+        const targetId = parseInt(req.params.id);
+        if (!targetId) {
             res.status(401).json({ message: 'No autorizado' });
             return;
         }
-        const following = await getFollowingOfUser(userId);
+        const following = await getFollowingOfUser(targetId);
         res.status(200).json(following);
     } catch (error) {
         console.error('Error en getFollowing:', error);
@@ -103,12 +103,12 @@ export const getFollowing = async (req: AuthRequest, res: Response): Promise<voi
 
 export const getFollowersCount = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
-        const userId = req.userId;
-        if (!userId) {
+        const targetId = parseInt(req.params.id);
+        if (!targetId) {
             res.status(401).json({ message: 'No autorizado' });
             return;
         }
-        const count = await getFollowersCountByUserId(userId);
+        const count = await getFollowersCountByUserId(targetId);
         res.status(200).json({ followers: count });
     } catch (error) {
         console.error('Error en getFollowersCount:', error);
@@ -118,15 +118,32 @@ export const getFollowersCount = async (req: AuthRequest, res: Response): Promis
 
 export const getFollowingCount = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
+        const targetId = parseInt(req.params.id);
+        if (!targetId) {
+            res.status(401).json({ message: 'No autorizado' });
+            return;
+        }
+        const count = await getFollowingCountByUserId(targetId);
+        res.status(200).json({ following: count });
+    } catch (error) {
+        console.error('Error en getFollowingCount:', error);
+        res.status(500).json({ message: 'Error al contar seguidos' });
+    }
+};
+
+export const checkIfFollowing = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
         const userId = req.userId;
         if (!userId) {
             res.status(401).json({ message: 'No autorizado' });
             return;
         }
-        const count = await getFollowingCountByUserId(userId);
-        res.status(200).json({ following: count });
+
+        const targetId = parseInt(req.params.id);
+        const already = await isAlreadyFollowing(userId, targetId);
+        res.status(200).json({ isFollowing: already });
     } catch (error) {
-        console.error('Error en getFollowingCount:', error);
-        res.status(500).json({ message: 'Error al contar seguidos' });
+        console.error('Error en checkIfFollowing:', error);
+        res.status(500).json({ message: 'Error al verificar seguimiento' });
     }
 };

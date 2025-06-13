@@ -14,7 +14,7 @@ const router = Router();
 router.use(authMiddleware);
 
 router.post('/', createRoutine);
-router.get('/', getRoutines);
+router.get('/user/:id', getRoutines);
 router.get('/feed/following', getPublicRoutinesFromFollowedUsers);
 router.put('/:id', updateRoutine);
 router.delete('/:id', deleteRoutine);

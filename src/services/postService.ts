@@ -17,7 +17,16 @@ export const createNewPost = async (
         author: { id: userId },
         routine,
     });
-    return await postRepo.save(newPost);
+    const saved = await postRepo.save(newPost);
+
+    const fullPost = await postRepo.findOne({
+        where: { id: saved.id },
+        relations: ['author', 'routine', 'routine.exercises'],
+    });
+
+    if (!fullPost) throw new Error('No se pudo recuperar el post completo');
+
+    return fullPost;
 };
 
 export const deletePostByUser = async (userId: number, postId: number): Promise<boolean> => {
@@ -39,7 +48,7 @@ export const getPostsByUserId = async (userId: number): Promise<Post[]> => {
     return await AppDataSource.getRepository(Post).find({
         where: { author: { id: userId } },
         order: { createdAt: 'DESC' },
-        relations: ['author', 'routine'],
+        relations: ['author', 'routine', 'routine.exercises', 'routine.owner'],
     });
 };
 
@@ -48,6 +57,8 @@ export const getFeedPostsByUserId = async (userId: number): Promise<Post[]> => {
         .createQueryBuilder('post')
         .leftJoinAndSelect('post.author', 'author')
         .leftJoinAndSelect('post.routine', 'routine')
+        .leftJoinAndSelect('routine.owner', 'routineOwner')
+        .leftJoinAndSelect('routine.exercises', 'exercises')
         .where(qb => {
             const subquery = qb
                 .subQuery()
@@ -65,6 +76,6 @@ export const getFeedPostsByUserId = async (userId: number): Promise<Post[]> => {
 export const getPostWithAuthorAndRoutine = async (postId: number): Promise<Post | null> => {
     return await AppDataSource.getRepository(Post).findOne({
         where: { id: postId },
-        relations: ['author', 'routine'],
+        relations: ['author', 'routine', 'routine.exercises'],
     });
 };

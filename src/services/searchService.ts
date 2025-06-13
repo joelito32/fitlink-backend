@@ -26,6 +26,7 @@ export const searchPublicRoutines = async (query: string): Promise<Routine[]> =>
     return await routineRepo
         .createQueryBuilder("routine")
         .leftJoinAndSelect("routine.owner", "owner")
+        .leftJoinAndSelect("routine.exercises", "exercise")
         .where("routine.isPublic = true AND (routine.title ILIKE :q OR routine.description ILIKE :q)", { q: `%${query}%` })
         .getMany();
 };

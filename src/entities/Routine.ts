@@ -6,10 +6,13 @@ import {
     OneToMany,
     CreateDateColumn,
     UpdateDateColumn,
+    ManyToMany,
+    JoinTable,
 } from "typeorm";
 import { User } from "./User";
 import { ExerciseLog } from "./ExerciseLog";
 import { SavedRoutine } from "./SavedRoutine";
+import { Exercise } from "./Exercise";
 
 @Entity()
 export class Routine {
@@ -31,10 +34,14 @@ export class Routine {
     @OneToMany(() => ExerciseLog, (exercise) => exercise.routine, {
         cascade: true,
     })
-    exercises!: ExerciseLog[];
+    logs!: ExerciseLog[];
 
     @OneToMany(() => SavedRoutine, (saved) => saved.routine)
     savedBy!: SavedRoutine[];
+
+    @ManyToMany(() => Exercise)
+    @JoinTable()
+    exercises!: Exercise[]
 
     @CreateDateColumn()
     createdAt!: Date;

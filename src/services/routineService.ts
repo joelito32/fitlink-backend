@@ -1,27 +1,18 @@
 import { AppDataSource } from '../data-source';
 import { Routine } from '../entities/Routine';
-import { ExerciseLog } from '../entities/ExerciseLog';
 import { fetchExerciseById } from './exerciseService';
+import { Exercise } from '../entities/Exercise';
 
 export const validateAndBuildExercises = async (
     exercises: any[]
-): Promise<ExerciseLog[] | null> => {
-    const validated: ExerciseLog[] = [];
+): Promise<Exercise[] | null> => {
+    const repo = AppDataSource.getRepository(Exercise);
+    const validated: Exercise[] = [];
 
     for (const e of exercises) {
-        const { exerciseId, sets, reps } = e;
-        if (!exerciseId || sets <= 0 || reps <= 0) return null;
-
-        const apiExercise = await fetchExerciseById(exerciseId);
-        if (!apiExercise || !apiExercise.name) return null;
-
-        const log = new ExerciseLog();
-        log.exerciseId = exerciseId;
-        log.name = apiExercise.name;
-        log.sets = sets;
-        log.reps = reps;
-
-        validated.push(log);
+        const found = await repo.findOneBy({ id: e.id || e.exerciseId });
+        if (!found) return null;
+        validated.push(found);
     }
 
     return validated;
@@ -31,7 +22,7 @@ export const createRoutineForUser = async (
     userId: number,
     title: string,
     description: string,
-    exercises: ExerciseLog[],
+    exercises: Exercise[],
     isPublic: boolean,
 ): Promise<Routine> => {
     const repo = AppDataSource.getRepository(Routine);
@@ -42,8 +33,13 @@ export const createRoutineForUser = async (
         exercises,
         isPublic,
     });
-
-    return await repo.save(routine);
+    const saved = await repo.save(routine);
+    const complete = await repo.findOne({
+        where: { id: saved.id },
+        relations: ['owner', 'exercises']
+    });
+    if (!complete) throw new Error('No se pudo recuperar la rutina guardada');
+    return complete;
 };
 
 export const getUserRoutines = async (userId: number): Promise<Routine[]> => {
@@ -67,14 +63,22 @@ export const updateRoutineData = async (
     routine: Routine,
     title: string,
     description: string,
-    exercises: ExerciseLog[],
+    exercises: Exercise[],
     isPublic: boolean,
 ): Promise<Routine> => {
     routine.title = title.trim();
     routine.description = description?.trim() || '';
     routine.exercises = exercises;
     routine.isPublic = isPublic;
-    return await AppDataSource.getRepository(Routine).save(routine);
+    await AppDataSource.getRepository(Routine).save(routine);
+    const updated = await AppDataSource.getRepository(Routine).findOne({
+        where: { id: routine.id },
+        relations: ['owner', 'exercises']
+    });
+
+    if (!updated) throw new Error("No se pudo recuperar la rutina actualizada");
+
+    return updated;
 };
 
 export const deleteRoutineById = async (routine: Routine): Promise<void> => {

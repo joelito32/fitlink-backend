@@ -40,7 +40,7 @@ export const removeSavedRoutineForUser = async (userId: number, routineId: numbe
 export const getSavedRoutinesForUser = async (userId: number): Promise<Routine[]> => {
     const saved = await AppDataSource.getRepository(SavedRoutine).find({
         where: { user: { id: userId } },
-        relations: ['routine', 'routine.owner'],
+        relations: ['routine', 'routine.owner', 'routine.exercises'],
         order: { id: 'DESC' },
     });
     return saved.map(s => s.routine);

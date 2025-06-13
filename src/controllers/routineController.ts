@@ -59,8 +59,10 @@ export const createRoutine = async (req: AuthRequest, res: Response): Promise<vo
 
 export const getRoutines = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
-        const userId = req.userId;
-        if (!userId) {
+        const { id } = req.params;
+        const userId = id ? parseInt(id) : req.userId;
+
+        if (!userId || isNaN(userId)) {
             res.status(401).json({ message: 'No autorizado' });
             return;
         }
