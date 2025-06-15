@@ -91,6 +91,7 @@ export const getPublicRoutinesFromFollowing = async (
     return await AppDataSource.getRepository(Routine)
         .createQueryBuilder('routine')
         .leftJoinAndSelect('routine.owner', 'owner')
+        .leftJoinAndSelect('routine.exercises', 'exercise')
         .where((qb) => {
             const sub = qb
                 .subQuery()

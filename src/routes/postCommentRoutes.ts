@@ -9,6 +9,7 @@ import {
     getRepliesForComment,
     getCommentCountForPost,
     getLikesCountForComment,
+    getRepliesCountForComment
 } from "../controllers/PostCommentController";
 import { authMiddleware } from "../middlewares/authMiddleware";
 
@@ -29,5 +30,6 @@ router.get('/:commentId/replies', getRepliesForComment);
 
 router.get('/post/:postId/count', getCommentCountForPost);
 router.get('/:commentId/likes/count', getLikesCountForComment);
+router.get('/:commentId/replies/count', getRepliesCountForComment);
 
 export default router;

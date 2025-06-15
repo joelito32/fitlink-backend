@@ -1,6 +1,5 @@
 import { Request, Response } from 'express';
 import { AuthRequest } from '../middlewares/authMiddleware';
-import { detectMentions } from '../services/mentionService';
 import {
     findPostById,
     findParentComment,
@@ -13,6 +12,8 @@ import {
     getCommentReplies,
     countPostComments,
     countCommentLikes,
+    findCommentById,
+    countCommentReplies
 } from '../services/postCommentService';
 import { createNotification } from '../services/notificationService';
 
@@ -26,7 +27,8 @@ export const createComment = async (req: AuthRequest, res: Response): Promise<vo
 
         const { postId, content, parentId } = req.body;
 
-        if (!postId || isNaN(parseInt(postId))) {
+        const postIdNum = parseInt(postId, 10);
+        if (!postIdNum || isNaN(postIdNum)) {
             res.status(400).json({ message: 'ID de post inválido' });
             return;
         }
@@ -41,40 +43,60 @@ export const createComment = async (req: AuthRequest, res: Response): Promise<vo
             return;
         }
 
-        if (parentId && isNaN(parseInt(parentId))) {
-            res.status(400).json({ message: 'ID de comentario padre inválido' });
-            return;
-        }
-
-        const post = await findPostById(parseInt(postId));
-        if (!post) {
+        const post = await findPostById(postIdNum);
+            if (!post) {
             res.status(404).json({ message: 'Post no encontrado' });
             return;
         }
 
-        if (parentId) {
-            const parent = await findParentComment(parseInt(parentId));
-            if (!parent) {
+        let parentComment;
+        if (parentId != null) {
+            const parentNum = Number(parentId);
+            if (!Number.isInteger(parentNum)) {
+                res.status(400).json({ message: 'ID de comentario padre inválido' });
+                return;
+            }
+            parentComment = await findParentComment(parentNum);
+            if (!parentComment) {
                 res.status(404).json({ message: 'Comentario padre no encontrado' });
                 return;
             }
-
-            if (parent.parent) {
+            if (parentComment.parent) {
                 res.status(400).json({ message: 'Solo se permite un nivel de respuesta' });
                 return;
             }
-
-            if (parent.author.id !== userId) {
-                await createNotification(parent.author.id, userId, 'ha respondido a tu comentario');
-            }
-        } else if (post.author.id !== userId) {
-            await createNotification(post.author.id, userId, 'ha comentado tu post');
         }
 
-        const comment = await createNewComment(userId, post, content, parentId);
-        await detectMentions(content, userId, false, undefined, comment.id);
+        if (parentComment) {
+            if (parentComment.author.id !== userId) {
+                await createNotification(
+                    parentComment.author.id,
+                    userId,
+                    'ha respondido a tu comentario'
+                );
+            }
+        } else if (post.author.id !== userId) {
+            await createNotification(
+                post.author.id,
+                userId,
+                'ha comentado tu post'
+            );
+        }
 
-        res.status(201).json({ message: 'Comentario creado', comment });
+        const newComment = await createNewComment(
+            userId,
+            post,
+            content,
+            parentComment?.id
+        );
+
+        const savedComment = await findCommentById(newComment.id);
+
+        res.status(201).json({
+            message: 'Comentario creado',
+            comment: savedComment
+        });
+
     } catch (error) {
         console.error('Error al crear comentario:', error);
         res.status(500).json({ message: 'Error interno' });
@@ -214,6 +236,21 @@ export const getLikesCountForComment = async (req: Request, res: Response): Prom
         res.status(200).json({ count });
     } catch (error) {
         console.error('Error al contar likes del comentario:', error);
+        res.status(500).json({ message: 'Error interno' });
+    }
+};
+
+export const getRepliesCountForComment = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const commentId = parseInt(req.params.commentId, 10);
+        if (isNaN(commentId)) {
+            res.status(400).json({ message: 'ID de comentario inválido' });
+            return;
+        }
+        const count = await countCommentReplies(commentId);
+        res.status(200).json({ count });
+    } catch (error) {
+        console.error('Error al contar respuestas del comentario:', error);
         res.status(500).json({ message: 'Error interno' });
     }
 };

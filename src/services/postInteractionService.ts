@@ -63,7 +63,7 @@ export const unsavePostByUser = async (userId: number, postId: number): Promise<
 export const getLikedPostsByUser = async (userId: number): Promise<Post[]> => {
     const likes = await AppDataSource.getRepository(PostLike).find({
         where: { user: { id: userId } },
-        relations: ['post', 'post.author', 'post.routine'],
+        relations: ['post', 'post.author', 'post.routine', 'post.routine.owner', 'post.routine.exercises'],
         order: { id: 'DESC' },
     });
     return likes.map(l => l.post);
@@ -72,7 +72,7 @@ export const getLikedPostsByUser = async (userId: number): Promise<Post[]> => {
 export const getSavedPostsByUser = async (userId: number): Promise<Post[]> => {
     const saved = await AppDataSource.getRepository(PostSaved).find({
         where: { user: { id: userId } },
-        relations: ['post', 'post.author', 'post.routine'],
+        relations: ['post', 'post.author', 'post.routine','post.routine.owner', 'post.routine.exercises'],
         order: { id: 'DESC' },
     });
     return saved.map(s => s.post);

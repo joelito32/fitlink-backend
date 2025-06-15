@@ -8,7 +8,9 @@ import {
     getPostWithAuthorAndRoutine,
     isRoutineExists,
 } from "../services/postService";
+import { hasUserLikedPost, hasUserSavedPost } from "../services/postInteractionService";
 import { detectMentions } from "../services/mentionService";
+import { Post } from "../entities/Post";
 
 export const createPost = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
@@ -76,11 +78,25 @@ export const deletePost = async (req: AuthRequest, res: Response): Promise<void>
     }
 };
 
-export const getUserPosts = async (req: Request, res: Response): Promise<void> => {
+export const getUserPosts = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
-        const userId = parseInt(req.params.userId);
-        const posts = await getPostsByUserId(userId);
-        res.status(200).json(posts);
+        const targetUserId = parseInt(req.params.userId);
+        const viewerUserId = req.userId;
+        if (!viewerUserId) {
+            res.status(401).json({ message: 'No autorizado' });
+            return;
+        }
+        const posts = await getPostsByUserId(targetUserId);
+
+    const enriched = await Promise.all(
+        posts.map(async post => ({
+            ...post,
+            isLiked: await hasUserLikedPost(viewerUserId, post.id),
+            isSaved: await hasUserSavedPost(viewerUserId, post.id),
+        }))
+    );
+
+        res.status(200).json(enriched);
     } catch (error) {
         console.error('Error al obtener posts del usuario:', error);
         res.status(500).json({ message: 'Error interno al obtener posts' });
@@ -95,7 +111,17 @@ export const getAllPosts = async (req: AuthRequest, res: Response): Promise<void
             return;
         }
         const posts = await getFeedPostsByUserId(userId);
-        res.status(200).json(posts);
+
+    const enriched = await Promise.all(
+        posts.map(async post => ({
+            ...post,
+            isLiked: await hasUserLikedPost(userId, post.id),
+            isSaved: await hasUserSavedPost(userId, post.id),
+        }))
+    );
+
+
+        res.status(200).json(enriched);
     } catch (error) {
         console.error('Error al obtener el feed de posts:', error);
         res.status(500).json({ message: 'Error interno al cargar el feed' });

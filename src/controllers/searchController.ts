@@ -4,10 +4,12 @@ import {
     searchPosts,
     searchPublicRoutines,
 } from "../services/searchService";
+import { AuthRequest } from "../middlewares/authMiddleware";
 
-export const search = async (req: Request, res: Response): Promise<void> => {
+export const search = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
         const { q, type } = req.query;
+        const viewerId = req.userId;
 
         if (!q || typeof q !== 'string') {
             res.status(400).json({ message: 'Falta el parámetro de búsqueda' });
@@ -21,7 +23,11 @@ export const search = async (req: Request, res: Response): Promise<void> => {
         }
 
         if (!type || type === 'post') {
-            results.posts = await searchPosts(q);
+            if (!viewerId) {
+                res.status(401).json({ message: 'No autorizado' });
+                return;
+            }
+            results.posts = await searchPosts(q, viewerId);
         }
 
         if (!type || type === 'routine') {

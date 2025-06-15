@@ -79,3 +79,4 @@ export const getPostWithAuthorAndRoutine = async (postId: number): Promise<Post 
         relations: ['author', 'routine', 'routine.exercises'],
     });
 };
+

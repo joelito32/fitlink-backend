@@ -6,7 +6,12 @@ import { createNotification } from "./notificationService";
 import { IsNull } from "typeorm";
 
 export const findPostById = async (postId: number): Promise<Post | null> => {
-    return await AppDataSource.getRepository(Post).findOneBy({ id: postId });
+    return await AppDataSource
+        .getRepository(Post)
+        .findOne({ 
+            where: {id: postId },
+            relations: ['author'], 
+        });
 };
 
 export const findParentComment = async (parentId: number): Promise<PostComment | null> => {
@@ -35,7 +40,7 @@ export const createNewComment = async (
 export const findCommentById = async (commentId: number): Promise<PostComment | null> => {
     return await AppDataSource.getRepository(PostComment).findOne({
         where: { id: commentId },
-        relations: ['author'],
+        relations: ['author', 'parent'],
     });
 };
 
@@ -107,4 +112,12 @@ export const countCommentLikes = async (commentId: number): Promise<number> => {
     return await AppDataSource.getRepository(PostCommentLike).count({
         where: { comment: { id: commentId } },
     });
+};
+
+export const countCommentReplies = async (commentId: number): Promise<number> => {
+    return await AppDataSource
+        .getRepository(PostComment)
+        .count({
+            where: { parent: { id: commentId } }
+        });
 };

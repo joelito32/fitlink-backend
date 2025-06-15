@@ -89,3 +89,25 @@ export const getSavedRoutines = async (req: AuthRequest, res: Response): Promise
         res.status(500).json({ message: 'Error interno' });
     }
 };
+
+export const checkIfRoutineSaved = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+        const userId = req.userId;
+        if (!userId) {
+            res.status(401).json({ message: 'No autorizado' });
+            return;
+        }
+        const routineId = parseInt(req.params.routineId);
+
+        if (!userId || isNaN(routineId)) {
+            res.status(400).json({ message: 'Datos inválidos' });
+            return;
+        }
+
+        const saved = await hasUserSavedRoutine(userId, routineId);
+        res.status(200).json({ saved });
+    } catch (error) {
+        console.error('Error al comprobar si la rutina está guardada:', error);
+        res.status(500).json({ message: 'Error interno del servidor' });
+    }
+}

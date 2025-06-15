@@ -25,7 +25,8 @@ export class Post {
     @CreateDateColumn()
     createdAt!: Date;
 
-    @ManyToOne(() => User, (user) => user.posts, { onDelete: 'CASCADE' })
+    @ManyToOne(() => User, (user) => user.posts, { onDelete: 'CASCADE', nullable: false })
+    @JoinColumn()
     author!: User;
 
     @ManyToOne(() => Routine, { nullable: true, onDelete: 'SET NULL' })
